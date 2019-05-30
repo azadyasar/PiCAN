@@ -1,6 +1,8 @@
 import can
 from can.bus import BusState
+import asyncio 
 
+from threading import Thread
 from CANMessage import CANMessage
 
 import logging 
@@ -21,7 +23,7 @@ class CANListener:
         # Stores the CAN message IDs (retrieved from the config.yaml file)
         # and their corresponding descriptions. e.g., {1: 'eng_speed'}
         self.config_messages = {} # set()
-        if config is not None and CAN_MESSAGES in self.config:
+        if self.config is not None and CAN_MESSAGES in self.config:
             for can_msg in self.config[CAN_MESSAGES]:
                 logging.info("Reading {} message information".format(can_msg))
                 id = self.config[CAN_MESSAGES][can_msg]['ID']
@@ -83,5 +85,38 @@ class CANListener:
         except KeyboardInterrupt:
             print("keyboardInterrupt! Stopped listening to the CN bus")
             pass
+    
+    def start_async_listener(self):
+        loop = asyncio.get_event_loop()
+        
+    def __start_background_loop(self, loop):
+        def run_forever(loop):
+            listeners = [self.listen_async_cb]
+            loop = asyncio.get_event_loop()
+            notifier = can.Notifier(self.bus, listeners, loop=loop)
+            try:
+                loop.run_forever()
+            except KeyboardInterrupt:
+                print("Interrupted")
+
+        thread = Thread(target=run_forever, args=(loop,))
+        thread.start()
+        thread.join()
+    
+    def listen_asynchronously(self):
+        func_info = inspect.currentframe().f_back.f_code
+        if self.bus is None:
+            logging.warning("[{}]: Must set bus first".format(func_info.co_name))
+            return
+        listeners = [self.listen_async_cb]
+        loop = asyncio.get_event_loop()
+        notifier = can.Notifier(self.bus, listeners, loop=loop)
+        try:
+            loop.run_forever()
+        except KeyboardInterrupt:
+            print("Interrupted")
+    
+    def listen_async_cb(self, msg):
+        print(msg)
     
     
