@@ -1,0 +1,7 @@
+Channels:
+    eng_speed:
+        ID: 1
+        rel_bytes: [2, 4]
+    torque:
+        ID: 2
+        rel_bytes: [4]

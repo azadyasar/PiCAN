@@ -1,0 +1,27 @@
+# Make sure to install RPI headers before compilation
+sudo apt-get install raspberrypi-kernel-headers
+
+# Within the peak-linux-driver-x.x.x, issue the following commands
+# Use NET=NETDEV_SUPPORT for native SocketCAN support
+make clean
+sudo make SUBDIRS=./driver/ PCC=NO DNG=NO ISA=NO PCI=NO PAR=NO
+sudo make install # may need to use above parameters e.g., SUBDIRS, PCC=NO, etc.
+
+# Make sure that it is installed properly
+sudo modprobe pcan
+ls /dev/
+# Should list something like pcan
+
+# Start the can0 network
+sudo ip link set can0 up type can bitrate 500000
+
+# Test if it works properyly
+cansend can0 123#DEADBEEF
+
+
+# Test if it works properly with Python. (Assuming you've installed pyhon-can package)
+import can
+bustype, channel = 'socketcan', 'can0' # Replace your CAN network with `can0`. You can find it by running ifconfig -a
+bus = can.interface.Bus(channel=channel, bustype=bustype)
+msg = can.Message(arbitration_id=0xc0ffee, data=[1, 2, 3, 4, 5, 6, 7, 8], is_extended_id=False)
+bus.send(msg) # PEAK CANUSB adapter should be blinking faster than before
