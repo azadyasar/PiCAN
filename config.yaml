@@ -1,4 +1,4 @@
-Channels:
+CAN_MESSAGES:
     eng_speed:
         ID: 1
         rel_bytes: [2, 4]

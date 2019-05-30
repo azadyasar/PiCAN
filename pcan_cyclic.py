@@ -5,11 +5,11 @@ import time
 
 import can
 
-logging.basicConfig(level=logging.INFO)
+logging.getLogger().setLevel(logging.INFO)
 
 def simple_periodic_send(bus):
     """
-    Sends a message every 20ms with no explicit timeout
+    Sends a message every 200ms with no explicit timeout
     Sleeps for 2 seconds then stops the task.
     """
     print("Starting to send a message every 200ms for 2s")
@@ -23,18 +23,4 @@ def simple_periodic_send(bus):
     time.sleep(2)
     task.stop()
     print("Stopped cyclic send")
-    
-def receive_all(bus):
-    try:
-        while True:
-            msg = bus.recv(1) # 1 sec timeout
-            if msg is not None:
-                print("Message: ")
-                print(msg)
-                print("Arbitration ID: {}\nDLC: {}\nData: {}".format(msg.arbitration_id, msg.dlc, msg.data)) 
-            except KeyboardInterrupt:
-                print("KeyboardInterrupt! Stopped listening the CAN bus")   
-                pass
-  
-    
 
