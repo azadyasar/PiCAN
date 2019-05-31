@@ -29,7 +29,7 @@ class CANListener:
                 id = self.config[CAN_MESSAGES][can_msg]['ID']
                 self.config_messages[id] = can_msg
             logging.info("Constructed requested CAN message ID set: {}".format(self.config_messages))
-        elif config is not None and CAN_MESSAGES not in self.config:
+        elif self.config is not None and CAN_MESSAGES not in self.config:
             logging.warning("config does not include {0}".format(CAN_MESSAGES))
     
     def init_can_messages(self):
@@ -85,11 +85,8 @@ class CANListener:
         except KeyboardInterrupt:
             print("keyboardInterrupt! Stopped listening to the CN bus")
             pass
-    
-    def start_async_listener(self):
-        loop = asyncio.get_event_loop()
         
-    def __start_background_loop(self, loop):
+    def start_background_listener(self, loop=None):
         def run_forever(loop):
             listeners = [self.listen_async_cb]
             loop = asyncio.get_event_loop()
@@ -99,9 +96,12 @@ class CANListener:
             except KeyboardInterrupt:
                 print("Interrupted")
 
-        thread = Thread(target=run_forever, args=(loop,))
+        thread = Thread(target=self.listen_asynchronously)
         thread.start()
-        thread.join()
+        try:
+            thread.join()
+        except KeyboardInterrupt:
+            logging.info("Keyboard interrupt. Stopping...")
     
     def listen_asynchronously(self):
         func_info = inspect.currentframe().f_back.f_code
@@ -109,6 +109,7 @@ class CANListener:
             logging.warning("[{}]: Must set bus first".format(func_info.co_name))
             return
         listeners = [self.listen_async_cb]
+        asyncio.set_event_loop(asyncio.new_event_loop())
         loop = asyncio.get_event_loop()
         notifier = can.Notifier(self.bus, listeners, loop=loop)
         try:
@@ -118,5 +119,9 @@ class CANListener:
     
     def listen_async_cb(self, msg):
         print(msg)
+        CANListener.print_postproc()
+        
+    def print_postproc():
+        print("Finished processing")
     
     
