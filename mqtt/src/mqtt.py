@@ -3,6 +3,7 @@ import yaml
 import time
 import paho.mqtt.client as mqtt
 import threading
+import re
 import logging as logger
 
 from socket import gaierror
@@ -57,34 +58,51 @@ class MqttClient:
             self.sub_topics = mqtt_config[CLIENT_STR][SUB_TOPICS_STR]
             self.pub_topics = mqtt_config[CLIENT_STR][PUB_TOPICS_STR]
         else:
-            self.host     = None
-            self.port     = None
-            self.uname    = None
-            self.password = None
+            self.host       = None
+            self.port       = None
+            self.uname      = None
+            self.password   = None
+            self.id         = "avl_rpi"
+            self.sub_topics = []
+            self.pub_topics = []
+        self.topic_func_map = { re.compile(".*/add_sub_topic"): self.add_sub_topic }
             
     def on_connect(self, client, userdata, flags, rc):
         logger.info("Client connected to the broker client: {}, userdata: {}, flags: {}, rc: {}".format(client, userdata, flags, rc))
         # Subscribing in on_connect() means that if we lose the connection and reconnect then
         # subscriptions will be renewed
-        print(2)
         logger.info("Subscribing to the following topics: {}".format(self.sub_topics))
         for sub_topic in self.sub_topics:
-            client.subscribe(sub_topic)
-#        client.subscribe("$SYS/broker/")
-#        client.subscribe("iphone")
-        logger.info("Starting the heartbeat thread")
-        client.publish("avl_rpi/message", "Greetings from AVL Pi")
+            self.client.subscribe(sub_topic)
+        logger.info("Starting the heartbeat thread...")
+        self.client.publish("avl_rpi/message", "Greetings from AVL Pi")
         self.heartbeat()
         
-    def on_message(client, userdata, message):
-        logger.info("Message received. client: {}, userdata: {}, message: {}".format(client, userdata, message))
-        logger.info("Topic: {} - Payload: {}".format(message.topic, message.payload))
-        
+    def on_message(self, client, userdata, message):
+        logger.info("Incoming message: Topic: {} - Payload: {}".format(message.topic, message.payload))
+
+        for topic_re in self.topic_func_map:
+            if topic_re.match(message.topic) is not None:
+                logging.info("{} is in the topic_function map".format(message.topic))
+                self.topic_func_map[message.topic](message.payload.decode("utf-8"))
+            else:
+                logging.info("{} does not match {}".format(topic_re, message.topic))
         
     def heartbeat(self):
-        logger.info("Heartbeat")
+        logger.info("### Heartbeat ###")
         self.client.publish(self.id + "/heartbeat", "ON", retain=True)
         threading.Timer(30, self.heartbeat).start()
+        
+    def add_sub_topic(self, _topic):
+        logger.info("Subscribing to {}".format(_topic))
+        self.sub_topics.append(_topic)
+        
+    def remove_sub_topic(self, _topic):
+        try:
+            self.sub_topics.remove(_topic)
+        except ValueError as valueErr:
+            logger.warning("Requested subscribe topic [{}] does not exist in the sub_topic list.\nDetails:".format(_topic, valueErr))         
+            pass
         
     '''
     0: success, connection accepted
@@ -94,10 +112,10 @@ class MqttClient:
     4: refused, bad username and password
     5: refused, not authorized
     '''
-    def connect(self, will=None):
+    def connect(self, will="will not defined"):
         self.client = mqtt.Client(self.id)
         self.client.on_connect = self.on_connect
-        self.client.on_message = MqttClient.on_message
+        self.client.on_message = self.on_message # MqttClient.on_message
         self.client.username_pw_set(self.uname, self.password)
         if will is not None:
             self.client.will_set("will", payload=will, qos=2, retain=False)
