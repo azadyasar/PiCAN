@@ -1,0 +1,13 @@
+OBD:
+  messages:
+    [
+      "FUEL_STATUS",
+      "ENGINE_LOAD",
+      "ENGINE_COOLANT_TEMP",
+      "RPM",
+      "SPEED",
+      "RUN_TIME",
+      "THROTTLE_POS",
+      "FUEL_LEVEL",
+      "FUEL_TYPE",
+    ]
