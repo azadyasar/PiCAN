@@ -1,9 +1,14 @@
 OBD:
+  ID: "avl_obd_listener1"
+  # Possible jobs:
+  #   - log: to log to the console
+  #   - publish: to publish through MQTT
+  job: "log"
   messages:
     [
       "FUEL_STATUS",
       "ENGINE_LOAD",
-      "ENGINE_COOLANT_TEMP",
+      "COOLANT_TEMP",
       "RPM",
       "SPEED",
       "RUN_TIME",

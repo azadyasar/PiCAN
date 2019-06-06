@@ -26,7 +26,7 @@ NAME_STR = "name"
 QOS_STR = "qos"
 HEARTBEAT_PERIOD_STR = "heartbeat_period"
 
-FILEPATH = "./config_mqtt.yaml"
+MQTT_CONFIG_FILEPATH = "./config_mqtt.yaml"
 
 
 def terminate(msg="No message provided"):
@@ -54,7 +54,10 @@ class Config:
 
 
 class MqttClient:
-    def __init__(self, mqtt_config={}):
+    def __init__(self, mqtt_config: dict = None):
+        if mqtt_config is None:
+            config = Config(MQTT_CONFIG_FILEPATH)
+            mqtt_config = config.read_config()
         if len(mqtt_config.keys()) is not 0:
             try:
                 self.host = mqtt_config[BROKER_STR][HOST_STR]
@@ -67,12 +70,13 @@ class MqttClient:
                 self.hb_period = mqtt_config[CLIENT_STR][HEARTBEAT_PERIOD_STR]
             except KeyError as key_error:
                 logger.error(
-                    "Error while reading the config file -{}-.\nDetails: {} attribute is not properly set".format(FILEPATH, key_error))
+                    "Error while reading the config file -{}-.\nDetails: {} attribute is not properly set".format(MQTT_CONFIG_FILEPATH, key_error))
                 self.init_attributes_default()
         else:
             self.init_attributes_default()
         # Regex can be used if custom message->action mechanism are desired
         # self.topic_func_map = {re.compile(".*/add_sub_topic"): self.add_sub_topic}
+        self.is_connected = False
         self.topic_func_map = {re.compile(".*/location"): [self.location_cb]}
 
     def init_attributes_default(self):
@@ -86,7 +90,8 @@ class MqttClient:
         self.hb_period = 15
 
     def on_connect(self, client, userdata, flags, rc):
-        logger.info("Client connected to the broker")
+        self.is_connected = True
+        logger.info("Client connected to the broker {}".format(self.host))
         # Subscribing in on_connect() means that if we lose the connection and reconnect then
         # subscriptions will be renewed
         logger.info(
@@ -97,6 +102,7 @@ class MqttClient:
         self.heartbeat()
 
     def on_disconnect(self, client, userdata, rc=0):
+        self.is_connected = False
         logger.info("Disconnecting with result code: {}".format(rc))
         client.loop_stop()
 
@@ -119,10 +125,10 @@ class MqttClient:
         self.client.publish(self.id + "/heartbeat", "ON", retain=True)
         threading.Timer(self.hb_period, self.heartbeat).start()
 
-    def publish(self, topic, payload, qos: int = 0):
+    def publish(self, topic, payload, qos: int = 0) -> mqtt.MQTTMessageInfo:
         if topic is None:
             return
-        self.client.publish(topic=topic, payload=payload, qos=qos)
+        return self.client.publish(topic=topic, payload=payload, qos=qos)
 
     # Registers a callback to the specified topic. When a message having the specified
     # topic arrives, the callback will be called.
@@ -223,13 +229,20 @@ class MqttTest:
         mqttClient.register_cb(".*speed", self.speed_cb)
 
 
+def test_mqtt_registration(mqtt_client: MqttClient):
+    mqtt_test1 = MqttTest("mqtt-test-1")
+    mqtt_test1.test_register_cb(mqtt_client)
+    mqtt_test2 = MqttTest("mqtt-test-2")
+    mqtt_test2.test_register_cb(mqtt_client)
+
+
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser()
     parser.add_argument("-id", "--id", default=None)
     args = vars(parser.parse_args())
 
-    config = Config(FILEPATH)
+    config = Config(MQTT_CONFIG_FILEPATH)
     config_dict = config.read_config()
 
     mqtt_client = MqttClient(config_dict)
@@ -237,13 +250,12 @@ if __name__ == "__main__":
         logger.info("Setting MQTT Client id to {}".format(args["id"]))
         mqtt_client.id = args["id"]
     mqtt_client.connect()
+    # ? mqtt_client.client._thread.join()
 
     # Testing if registration within the MqttClient works.
     # Remove once deployed to production
-    mqttTest = MqttTest("mqtt-test-1")
-    mqttTest.test_register_cb(mqtt_client)
-    mqttTest2 = MqttTest("mqtt-test-2")
-    mqttTest2.test_register_cb(mqtt_client)
+    test_mqtt_registration(mqtt_client)
+
     loop = asyncio.get_event_loop()
     loop.run_forever()
     logger.info("End of line")

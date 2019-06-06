@@ -1,0 +1,5 @@
+enumTest:
+  type: string
+  enum:
+    - one
+    - two
