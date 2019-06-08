@@ -1,4 +1,5 @@
 import sys
+import os
 import obd
 import logging as logger
 import yaml
@@ -6,7 +7,8 @@ from mqtt import MqttClient
 
 logger.getLogger(__name__).setLevel(logger.DEBUG)
 
-OBD_CONFIG_FILEPATH = "obd/config_obd.yaml"
+OBD_CONFIG_FILEPATH = os.path.dirname(
+    os.path.realpath(__file__)) + "/config_obd.yaml"
 
 # Config keyword
 OBD_STR = "OBD"
@@ -90,6 +92,7 @@ class OBDTracker:
 
         if self.connection is None or not self.connection.is_connected():
             logger.warning("Unable to subscribe to the OBD messages")
+            self.shut_down()
             return
         self.watch_obd_messages()
         # Start the asynchronous event loop
@@ -100,7 +103,7 @@ class OBDTracker:
             logger.warning("OBDListener is assigned to log incoming messages. But the logger level is {}".format(
                 logger.getLevelName(logger.getLogger().level)))
             return False
-        elif self.job is 'publish' and (self.mqtt_client is None or self.mqtt_client.is_connected()):
+        elif self.job is 'publish' and (self.mqtt_client is None or not self.mqtt_client.is_connected):
             logger.warning("OBDListener is assigned to publish incoming messages through MQTT." +
                            " But the MqttClient is None.")
             return False
@@ -155,4 +158,5 @@ if __name__ == "__main__":
     import asyncio
     loop = asyncio.get_event_loop()
     loop.run_forever()
+    obd_tracker.shut_down()
     logger.info("End of line")

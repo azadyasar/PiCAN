@@ -1,5 +1,5 @@
 OBD:
-  ID: "avl_obd_listener1"
+  ID: "avl_obd_tracker1"
   # Possible jobs:
   #   - log: to log to the console
   #   - publish: to publish through MQTT

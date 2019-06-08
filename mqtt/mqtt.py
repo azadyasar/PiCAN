@@ -1,4 +1,5 @@
 import sys
+import os
 import yaml
 import time
 import paho.mqtt.client as mqtt
@@ -26,7 +27,8 @@ NAME_STR = "name"
 QOS_STR = "qos"
 HEARTBEAT_PERIOD_STR = "heartbeat_period"
 
-MQTT_CONFIG_FILEPATH = "./config_mqtt.yaml"
+MQTT_CONFIG_FILEPATH = os.path.dirname(
+    os.path.realpath(__file__)) + "/config_mqtt.yaml"
 
 
 def terminate(msg="No message provided"):
@@ -213,6 +215,10 @@ class MqttClient:
 
         # self.client.loop_forever()
         self.client.loop_start()
+
+    def shut_down(self):
+        self.client.loop_stop()
+        self.client.disconnect()
 
 
 class MqttTest:
