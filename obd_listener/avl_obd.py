@@ -111,6 +111,7 @@ class OBDTracker:
         logger.info("OBD tracker subscribing to the following OBD messages: {}".format(
             self.obd_messages))
         callback_func = self.obd_response_callback_log if self.job is 'log' else self.obd_response_callback_publish
+        # @TODO Check if obd_message is within the obd.commands
         for obd_message in self.obd_messages:
             self.connection.watch(
                 obd.commands[obd_message], callback=callback_func)

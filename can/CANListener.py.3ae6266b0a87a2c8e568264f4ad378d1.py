@@ -123,8 +123,8 @@ class CANListener:
         CANListener.print_postproc()
 
     def send_message(self, arb_id, data):
-        can_message = can.Message(arbitration_id=arb_id, data=data)
-        self.bus.send(can_message)
+      can_message = can.Message(arbitration_id=arb_id, data=data)
+      self.bus.send(can_message)
 
     @staticmethod
     def print_postproc():
