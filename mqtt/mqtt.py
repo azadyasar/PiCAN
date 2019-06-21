@@ -7,28 +7,11 @@ import threading
 import re
 import logging as logger
 import asyncio
-
 from socket import gaierror
 
+from mqtt_config import CONST as MQTT_CONSTANTS
 
 logger.getLogger().setLevel(logger.DEBUG)
-
-# Config keywords
-BROKER_STR = 'Broker'
-HOST_STR = 'host'
-PORT_STR = 'port'
-UNAME_STR = 'username'
-PASSWORD_STR = 'password'
-CLIENT_STR = 'Client'
-ID_STR = 'id'
-SUB_TOPICS_STR = "subscribe_topics"
-PUB_TOPICS_STR = "pub_topics"
-NAME_STR = "name"
-QOS_STR = "qos"
-HEARTBEAT_PERIOD_STR = "heartbeat_period"
-
-MQTT_CONFIG_FILEPATH = os.path.dirname(
-    os.path.realpath(__file__)) + "/config_mqtt.yaml"
 
 
 def terminate(msg="No message provided"):
@@ -58,28 +41,29 @@ class Config:
 class MqttClient:
     def __init__(self, mqtt_config: dict = None):
         if mqtt_config is None:
-            config = Config(MQTT_CONFIG_FILEPATH)
+            config = Config(MQTT_CONSTANTS.MQTT_CONFIG_FILEPATH)
             mqtt_config = config.read_config()
         if len(mqtt_config.keys()) is not 0:
             try:
-                self.host = mqtt_config[BROKER_STR][HOST_STR]
-                self.port = mqtt_config[BROKER_STR][PORT_STR]
-                self.uname = mqtt_config[BROKER_STR][UNAME_STR]
-                self.password = mqtt_config[BROKER_STR][PASSWORD_STR]
-                self.id = mqtt_config[CLIENT_STR][ID_STR]
-                self.sub_topics = mqtt_config[CLIENT_STR][SUB_TOPICS_STR]
-                self.pub_topics = mqtt_config[CLIENT_STR][PUB_TOPICS_STR]
-                self.hb_period = mqtt_config[CLIENT_STR][HEARTBEAT_PERIOD_STR]
+                self.host = mqtt_config[MQTT_CONSTANTS.BROKER_STR][MQTT_CONSTANTS.HOST_STR]
+                self.port = mqtt_config[MQTT_CONSTANTS.BROKER_STR][MQTT_CONSTANTS.PORT_STR]
+                self.uname = mqtt_config[MQTT_CONSTANTS.BROKER_STR][MQTT_CONSTANTS.UNAME_STR]
+                self.password = mqtt_config[MQTT_CONSTANTS.BROKER_STR][MQTT_CONSTANTS.PASSWORD_STR]
+                self.id = mqtt_config[MQTT_CONSTANTS.CLIENT_STR][MQTT_CONSTANTS.ID_STR]
+                self.sub_topics = mqtt_config[MQTT_CONSTANTS.CLIENT_STR][MQTT_CONSTANTS.SUB_TOPICS_STR]
+                self.pub_topics = mqtt_config[MQTT_CONSTANTS.CLIENT_STR][MQTT_CONSTANTS.PUB_TOPICS_STR]
+                self.hb_period = mqtt_config[MQTT_CONSTANTS.CLIENT_STR][MQTT_CONSTANTS.HEARTBEAT_PERIOD_STR]
             except KeyError as key_error:
                 logger.error(
-                    "Error while reading the config file -{}-.\nDetails: {} attribute is not properly set".format(MQTT_CONFIG_FILEPATH, key_error))
+                    "Error while reading the config file -{}-.\nDetails: {} attribute is not properly set".format(MQTT_CONSTANTS.MQTT_CONFIG_FILEPATH, key_error))
                 self.init_attributes_default()
         else:
             self.init_attributes_default()
         # Regex can be used if custom message->action mechanism are desired
         # self.topic_func_map = {re.compile(".*/add_sub_topic"): self.add_sub_topic}
         self.is_connected = False
-        self.topic_func_map = {re.compile(".*/location"): [self.location_cb]}
+        self.topic_func_map = {}
+        # self.topic_func_map = {re.compile(".*/location"): [self.location_cb]}
 
     def init_attributes_default(self):
         self.host = None
@@ -124,7 +108,7 @@ class MqttClient:
 
     def heartbeat(self):
         logger.info("### Heartbeat ###")
-        self.client.publish(self.id + "/heartbeat", "ON", retain=True)
+        self.client.publish(self.id + "/heartbeat", "ON", retain=False, qos=1)
         threading.Timer(self.hb_period, self.heartbeat).start()
 
     def publish(self, topic, payload, qos: int = 0) -> mqtt.MQTTMessageInfo:
@@ -146,6 +130,8 @@ class MqttClient:
             if len(matched_topics) is 0:
                 logger.warning("Registering a callback that is not in the subscribed topics. sub_topics: {}, sub_topic: {}".format(
                     self.sub_topics, _sub_topic))
+                # CHECK Should we return false? Might be the case that the registered topic will
+                # be subscribed in the future
                 return False
         # this condition will never hold True as we are converting str to regex
         # TODO either remove or allow str arguments
@@ -212,6 +198,10 @@ class MqttClient:
             logger.error("Error while trying to connect to the {} Status: {}\nDetailst: {}".format(
                 self.host, conn_status, value_err))
             terminate(value_err)
+        except TimeoutError as timeoutError:
+            logger.error(
+                "TimeoutError occured.\nDetails: {}".format(timeoutError))
+            terminate("Timeout")
 
         # self.client.loop_forever()
         self.client.loop_start()
@@ -227,12 +217,12 @@ class MqttTest:
         self.id = id
 
     def speed_cb(self, message):
-        logger.info("MqttTest [{}]: speed_cb -> topic: {}, paylaod: {}".format(
+        logger.info("MqttTest [{}]: Registered_CB -> topic: {}, paylaod: {}".format(
             self.id, message.topic, message.payload.decode("utf-8")))
 
     def test_register_cb(self, mqttClient: MqttClient):
         logger.info("Testing register_cb of {}".format(self.id))
-        mqttClient.register_cb(".*speed", self.speed_cb)
+        mqttClient.register_cb(".*test2", self.speed_cb)
 
 
 def test_mqtt_registration(mqtt_client: MqttClient):
@@ -248,7 +238,7 @@ if __name__ == "__main__":
     parser.add_argument("-id", "--id", default=None)
     args = vars(parser.parse_args())
 
-    config = Config(MQTT_CONFIG_FILEPATH)
+    config = Config(MQTT_CONSTANTS.MQTT_CONFIG_FILEPATH)
     config_dict = config.read_config()
 
     mqtt_client = MqttClient(config_dict)
