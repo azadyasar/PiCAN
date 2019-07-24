@@ -7,8 +7,10 @@ import os
 import yaml
 import logging
 
+logging.getLogger().setLevel(logging.INFO)
+
 CAN_CONFIG_FILEPATH = os.path.dirname(
-    os.path.realpath(__file__)) + "/config.yaml"
+    os.path.realpath(__file__)) + "/config_can.yaml"
 
 
 class Config:
@@ -31,7 +33,7 @@ class Config:
                     return yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
                     logging.warning(
-                        "Exception occured while parsing config file", exc)
+                        "Exception occured while parsing config file {}".format(exc))
                     return {}
         except FileNotFoundError:
             logging.warning("Config file not found")
@@ -45,7 +47,7 @@ class Config:
                     return yaml.safe_load(stream)
                 except yaml.YAMLError as exc:
                     logging.warning(
-                        "Exception occured while parsing config file", exc)
+                        "Exception occured while parsing config file {}".format(exc))
                     return {}
         except FileNotFoundError:
             logging.warning("Config file not found")

@@ -28,8 +28,8 @@ class CANListener:
         if self.config is not None and CAN_MESSAGES in self.config:
             for can_msg in self.config[CAN_MESSAGES]:
                 logging.info("Reading {} message information".format(can_msg))
-                id = self.config[CAN_MESSAGES][can_msg]['ID']
-                self.config_messages[id] = can_msg
+                id = can_msg['ID']
+                self.config_messages[id] = can_msg['desc']
             logging.info("Constructed requested CAN message ID - Description table: {}".format(
                 self.config_messages))
         elif self.config is not None and CAN_MESSAGES not in self.config:

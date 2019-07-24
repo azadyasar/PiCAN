@@ -9,7 +9,7 @@ import logging as logger
 import asyncio
 from socket import gaierror
 
-from mqtt_config import CONST as MQTT_CONSTANTS
+from mqtt_constants import CONST as MQTT_CONSTANTS
 
 logger.getLogger().setLevel(logger.DEBUG)
 
@@ -59,7 +59,7 @@ class MqttClient:
                 self.init_attributes_default()
         else:
             self.init_attributes_default()
-        # Regex can be used if custom message->action mechanism are desired
+        # Regex can be used if custom message->action mechanism is desired
         # self.topic_func_map = {re.compile(".*/add_sub_topic"): self.add_sub_topic}
         self.is_connected = False
         self.topic_func_map = {}
