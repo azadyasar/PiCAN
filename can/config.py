@@ -15,11 +15,6 @@ CAN_CONFIG_FILEPATH = os.path.dirname(
 
 class Config:
 
-    NETWORK_STR = "Network"
-    BUSTYPE_STR = "bustype"
-    CHANNEL_STR = "channel"
-    BITRATE_STR = "bitrate"
-
     def __init__(self, filename: str = None):
         self.filename = CAN_CONFIG_FILEPATH if filename is None else filename
 
