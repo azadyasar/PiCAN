@@ -2,11 +2,11 @@ Network:
   # Possible bustypes:
   #   - socketcan: to use native socketcan driver. (on Linux)
   #   - pcan: to used PEAK CAN intercase. (You should have the PCANBasic.dll)
-  bustype: "socketcan"
+  bustype: "pcan"
   # Possible channels:
   #   - can0: use with socketcan
   #   - PCAN_USBBUS1: use with pcan
-  channel: "can0"
+  channel: "PCAN_USBBUS1"
   bitrate: 1000000
 CAN_MESSAGES:
   - desc: eng_speed

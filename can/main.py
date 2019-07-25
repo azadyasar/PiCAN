@@ -18,12 +18,11 @@ class KeyboardListener:
 
     def on_press(self, key: keyboard.Key):
         try:
-            print('Alphanumeric key {0} pressed'.format(key.char))
+            # print('Alphanumeric key {0} pressed'.format(key.char))
             if key.char == 's':
-                logging.info("Sending a random can message")
-                data = []
-                for i in range(randint(0, 8)):
-                    data[i] = randint(0, 15)
+                data = [randint(0, 15) for i in range(randint(0, 8))]
+                logging.info(
+                    "Sending a random can message with data: {}".format(data))
                 self.can_listener.send_message(
                     arb_id=100, data=data)
             elif key.char == 'p' or key.char == 'P':
@@ -33,7 +32,8 @@ class KeyboardListener:
                 logging.info("Restarting the async listener")
                 self.can_listener.start_background_listener()
         except AttributeError:
-            print('Special key {0} pressed'.format(key))
+            # print('Special key {0} pressed'.format(key))
+            pass
 
     def on_release(self, key: keyboard.Key):
         if key == keyboard.Key.esc:
@@ -43,6 +43,7 @@ class KeyboardListener:
             return False
 
     def start(self):
+        logging.info("Keyboard listener is being activated.")
         with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as key_listener:
             self.keyboard_listener = key_listener
             key_listener.join()
@@ -73,4 +74,6 @@ if __name__ == "__main__":
     can_listener.start_background_listener()
     keyboard_listener = KeyboardListener(can_listener)
     keyboard_listener.start()
+    if bus is not None:
+        bus.shutdown()
     logging.info("Stopped listening. Cleaning up..")

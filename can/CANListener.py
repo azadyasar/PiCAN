@@ -18,6 +18,7 @@ class CANListener:
         self.config = config
         self.listener_thread = None
         self.notifier = None
+        self.loop = None
         self.construct_id_desc_mapping()
         self.init_can_messages()
         self.construct_message_id_mapping()
@@ -29,8 +30,8 @@ class CANListener:
         if self.config is not None and CAN_CONSTANTS.CAN_MESSAGES_STR in self.config:
             for can_msg in self.config[CAN_CONSTANTS.CAN_MESSAGES_STR]:
                 logging.info("Reading {} message information".format(can_msg))
-                id = can_msg['ID']
-                self.msg_id_desc_map[id] = can_msg['desc']
+                id = can_msg[CAN_CONSTANTS.ID_STR]
+                self.msg_id_desc_map[id] = can_msg[CAN_CONSTANTS.DESC_STR]
             logging.info("Constructed requested CAN Message ID - Description Table. # of Entries: {}".format(
                 len(self.msg_id_desc_map)))
         elif self.config is not None and CAN_CONSTANTS.CAN_MESSAGES_STR not in self.config:
@@ -113,17 +114,16 @@ class CANListener:
             return
         listeners = [CANListener.addon_can_cb, self.listen_async_cb]
         asyncio.set_event_loop(asyncio.new_event_loop())
-        loop = asyncio.get_event_loop()
-        self.notifier = can.Notifier(self.bus, listeners, loop=loop)
-        try:
-            loop.run_forever()
-            self.listener_thread.join()
-        except KeyboardInterrupt:
-            print("Interrupted")
+        self.loop = asyncio.get_event_loop()
+        logging.info("Starting the notifier loop...")
+        self.notifier = can.Notifier(self.bus, listeners, loop=self.loop)
 
     def stop_async_listener(self):
         if self.notifier is not None:
+            logging.info("Shutting down the background loop..")
             self.notifier.stop()
+            self.loop.close()
+            self.loop = None
             self.notifier = None
 
     def listen_async_cb(self, msg):
@@ -140,8 +140,8 @@ class CANListener:
 
     @staticmethod
     def print_postproc():
-        print("Finished processing")
+        print("Finished processing.")
 
     @staticmethod
     def addon_can_cb(msg):
-        print("Addon can callback: {}".format(msg))
+        print("Addon CAN callback: {}".format(msg))

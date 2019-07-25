@@ -10,3 +10,6 @@ class CAN_CONSTANTS:
     CONFIG_FILEPATH = os.path.dirname(
         os.path.realpath(__file__)) + "/config_can.yaml"
     CAN_MESSAGES_STR = "CAN_MESSAGES"
+    ID_STR = "id"
+    DESC_STR = "desc"
+    REL_BYTES_STR = "rel_bytes"
