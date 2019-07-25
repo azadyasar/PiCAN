@@ -1,6 +1,7 @@
 import can
 from can.bus import BusState
 import asyncio
+import signal
 
 from threading import Thread
 from CANMessage import CANMessage
@@ -112,17 +113,20 @@ class CANListener:
             logging.warning(
                 "[{}]: Must set bus first".format(func_info.co_name))
             return
-        listeners = [CANListener.addon_can_cb, self.listen_async_cb]
+        listeners = [self.listen_async_cb]
         asyncio.set_event_loop(asyncio.new_event_loop())
         self.loop = asyncio.get_event_loop()
         logging.info("Starting the notifier loop...")
         self.notifier = can.Notifier(self.bus, listeners, loop=self.loop)
+        self.loop.run_forever()
 
     def stop_async_listener(self):
         if self.notifier is not None:
             logging.info("Shutting down the background loop..")
             self.notifier.stop()
-            self.loop.close()
+            self.loop.stop()
+            self.listener_thread.join()
+            logging.info("Thread - II joined")
             self.loop = None
             self.notifier = None
 
