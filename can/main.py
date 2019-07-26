@@ -15,10 +15,15 @@ class KeyboardListener:
     def __init__(self, can_listener):
         self.can_listener = can_listener
         self.keyboard_listener = None
+        self.is_working = False
 
     def on_press(self, key: keyboard.Key):
+        if self.is_working is True:
+            logging.warning("Already working on a request. Wait a sec.")
+            return
         try:
             # print('Alphanumeric key {0} pressed'.format(key.char))
+            self.is_working = True
             if key.char == 's':
                 data = [randint(0, 15) for i in range(randint(0, 8))]
                 logging.info(
@@ -34,6 +39,8 @@ class KeyboardListener:
         except AttributeError:
             # print('Special key {0} pressed'.format(key))
             pass
+        finally:
+            self.is_working = False
 
     def on_release(self, key: keyboard.Key):
         if key == keyboard.Key.esc:
