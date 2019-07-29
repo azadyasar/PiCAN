@@ -3,7 +3,7 @@ from pynput import keyboard
 from random import randint
 
 
-class KeyboardListener:
+class CANKeyboardListener:
     def __init__(self, can_listener):
         self.can_listener = can_listener
         self.keyboard_listener = None

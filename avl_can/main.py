@@ -1,11 +1,11 @@
 from CANListener import CANListener
-from config import Config
+from can_config import Config
 import sys
 import can
 import logging
 
 from can_constants import CAN_CONSTANTS
-from KeyboardListener import KeyboardListener
+from CANKeyboardListener import CANKeyboardListener
 
 logging.getLogger().setLevel(logging.INFO)
 
@@ -31,7 +31,7 @@ if __name__ == "__main__":
     can_listener = CANListener(bus, config_dict)
     logging.info("Starting async listener")
     can_listener.start_background_listener()
-    keyboard_listener = KeyboardListener(can_listener)
+    keyboard_listener = CANKeyboardListener(can_listener)
     keyboard_listener.start()
     if bus is not None:
         bus.shutdown()

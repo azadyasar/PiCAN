@@ -3,7 +3,10 @@ Initialize with a YAML config filepath. Parses and returns
 the config YAML file as a dict object
 
 """
-from can_constants import CAN_CONSTANTS
+try:
+    from .can_constants import CAN_CONSTANTS
+except ImportError:
+    from can_constants import CAN_CONSTANTS
 import os
 import yaml
 import logging

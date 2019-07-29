@@ -9,7 +9,7 @@ import logging as logger
 import asyncio
 from socket import gaierror
 
-from mqtt_constants import CONST as MQTT_CONSTANTS
+from .mqtt_constants import CONST as MQTT_CONSTANTS
 
 logger.getLogger().setLevel(logger.DEBUG)
 
@@ -206,7 +206,7 @@ class MqttClient:
         # self.client.loop_forever()
         self.client.loop_start()
 
-    def shut_down(self):
+    def shutdown(self):
         self.client.loop_stop()
         self.client.disconnect()
 

@@ -5,9 +5,16 @@ import signal
 
 from threading import Thread
 import threading
-from CANMessage import CANMessage
 
-from can_constants import CAN_CONSTANTS
+try:
+    from .CANMessage import CANMessage
+except ImportError:
+    from CANMessage import CANMessage
+
+try:
+    from .can_constants import CAN_CONSTANTS
+except ImportError:
+    from can_constants import CAN_CONSTANTS
 
 import logging
 import inspect

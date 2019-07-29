@@ -1,9 +1,9 @@
-from CANListener import CANListener
-from can_constants import CAN_CONSTANTS
-from config import Config
+from .CANListener import CANListener
+from .can_constants import CAN_CONSTANTS
+from .can_config import Config
 
 import can
-from CANMessage import CANMessage
+from .CANMessage import CANMessage
 import logging
 
 logging.getLogger().setLevel(logging.INFO)
@@ -25,7 +25,7 @@ class CANClient:
     def connect(self):
         try:
             self.bus = can.interface.Bus(
-                channel=self.channel, bustype=self.bus, bitrate=self.bitrate)
+                channel=self.channel, bustype=self.bustype, bitrate=self.bitrate)
             logging.info("Connected to the CAN bus.")
         except OSError as osErr:
             logging.error(
@@ -33,6 +33,7 @@ class CANClient:
             return False
 
         self.can_listener = CANListener(bus=self.bus, config=self.config_dict)
+        return True
 
     def shutdown(self):
         if self.bus is not None:

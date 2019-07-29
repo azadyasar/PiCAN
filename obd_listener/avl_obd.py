@@ -92,7 +92,7 @@ class OBDTracker:
 
         if self.connection is None or not self.connection.is_connected():
             logger.warning("Unable to subscribe to the OBD messages")
-            self.shut_down()
+            self.shutdown()
             return
         self.watch_obd_messages()
         # Start the asynchronous event loop
@@ -113,8 +113,12 @@ class OBDTracker:
         callback_func = self.obd_response_callback_log if self.job is 'log' else self.obd_response_callback_publish
         # @TODO Check if obd_message is within the obd.commands
         for obd_message in self.obd_messages:
-            self.connection.watch(
-                obd.commands[obd_message], callback=callback_func)
+            if obd_message in obd.commands:
+                self.connection.watch(
+                    obd.commands[obd_message], callback=callback_func)
+            else:
+                logger.warning(
+                    "Topic is not in the OBD Command List. Topic: {}".format(obd_message))
         return True
 
     def obd_response_callback_log(self, response: obd.OBDResponse):
@@ -143,10 +147,19 @@ class OBDTracker:
     def set_mqtt_client(self, mqtt_client: MqttClient):
         self.mqtt_client = mqtt_client
 
-    def shut_down(self, reason: str = None):
+    def shutdown(self, reason: str = None):
         logger.info(
             "Shutting down the OBD connection. Reason = {}".format(reason))
         self.connection.close()
+
+    def send_message(self, arb_id, data):
+        pass
+
+    def listen_async(self):
+        pass
+
+    def stop_listener(self):
+        pass
 
 
 if __name__ == "__main__":
@@ -159,5 +172,5 @@ if __name__ == "__main__":
     import asyncio
     loop = asyncio.get_event_loop()
     loop.run_forever()
-    obd_tracker.shut_down()
+    obd_tracker.shutdown()
     logger.info("End of line")
