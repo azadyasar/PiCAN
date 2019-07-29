@@ -135,6 +135,8 @@ class CANListener:
             self.loop = None
             self.notifier = None
             self.listener_thread = None
+        else:
+            logging.info("No listeners are running...")
 
     def listen_async_cb(self, msg):
         print(msg)
