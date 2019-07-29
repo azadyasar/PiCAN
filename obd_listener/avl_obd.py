@@ -5,6 +5,8 @@ import logging as logger
 import yaml
 from mqtt import MqttClient
 
+from serial.serialutil import SerialException
+
 logger.getLogger(__name__).setLevel(logger.DEBUG)
 
 OBD_CONFIG_FILEPATH = os.path.dirname(
@@ -61,6 +63,7 @@ class OBDTracker:
         self.id = 'obd-test'
         self.mqtt_client = mqtt_client
         self.set_up_config(config_dict)
+        self.connection = None
 
     # `config` can be either a file path or a config dict
     def set_up_config(self, config=None):
@@ -86,11 +89,16 @@ class OBDTracker:
             logger.info("Can't get supported commands while disconnected")
 
     def connect(self, print_info: bool = True):
-        self.connection = obd.Async()
+        try:
+            self.connection = obd.Async()
+        except SerialException as serialExc:
+            logger.error(
+                "Error while trying to connect to the OBD port.\nDetails: {}".format(serialExc))
+            return False
         if print_info:
             self.print_supported_commands()
 
-        if self.connection is None or not self.connection.is_connected():
+        if self.connection is not None or not self.connection.is_connected():
             logger.warning("Unable to subscribe to the OBD messages")
             self.shutdown()
             return
@@ -138,6 +146,8 @@ class OBDTracker:
             topic=obd_message_name, payload=response.value)
 
     def test_query(self):
+        if self.connection is None:
+            return
         logger.info("[TEST] Querying the car. Status: {}".format(
             self.connection.status()))
         rpm_cmd = obd.commands['RPM']
@@ -150,7 +160,8 @@ class OBDTracker:
     def shutdown(self, reason: str = None):
         logger.info(
             "Shutting down the OBD connection. Reason = {}".format(reason))
-        self.connection.close()
+        if self.connection is not None:
+            self.connection.close()
 
     def send_message(self, arb_id, data):
         pass
