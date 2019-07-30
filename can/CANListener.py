@@ -4,6 +4,7 @@ import asyncio
 import signal
 
 from threading import Thread
+import threading
 from CANMessage import CANMessage
 
 from can_constants import CAN_CONSTANTS
@@ -20,6 +21,7 @@ class CANListener:
         self.listener_thread = None
         self.notifier = None
         self.loop = None
+        self.listener_thread = None
         self.construct_id_desc_mapping()
         self.init_can_messages()
         self.construct_message_id_mapping()
@@ -99,6 +101,9 @@ class CANListener:
             pass
 
     def start_background_listener(self) -> Thread:
+        if (self.listener_thread is not None and self.listener_thread.is_alive()):
+            logging.info("A thread is already running. Shutting it down..")
+            self.stop_async_listener()
         self.listener_thread = Thread(target=self.listen_asynchronously)
         self.listener_thread.start()
         return self.listener_thread
@@ -118,15 +123,16 @@ class CANListener:
         self.loop = asyncio.get_event_loop()
         logging.info("Starting the notifier loop...")
         self.notifier = can.Notifier(self.bus, listeners, loop=self.loop)
-        self.loop.run_forever()
+        if not self.loop.is_running():
+            self.loop.run_forever()
 
     def stop_async_listener(self):
         if self.notifier is not None:
             logging.info("Shutting down the background loop..")
             self.notifier.stop()
+            self.loop.call_soon_threadsafe(self.loop.stop)
             self.loop.stop()
             self.listener_thread.join()
-            logging.info("Thread - II joined")
             self.loop = None
             self.notifier = None
 
