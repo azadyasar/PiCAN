@@ -5,6 +5,9 @@ import time
 import paho.mqtt.client as mqtt
 import threading
 import re
+# _pattern_type is no longer available starting from version 3.7
+if sys.version_info[1] >= 7:
+    re._pattern_type = re.Pattern
 import logging as logger
 import asyncio
 from socket import gaierror
