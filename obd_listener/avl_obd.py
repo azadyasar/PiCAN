@@ -5,6 +5,8 @@ import logging as logger
 import yaml
 from mqtt import MqttClient
 
+from serial.serialutil import SerialException
+
 logger.getLogger(__name__).setLevel(logger.DEBUG)
 
 OBD_CONFIG_FILEPATH = os.path.dirname(
@@ -61,6 +63,7 @@ class OBDTracker:
         self.id = 'obd-test'
         self.mqtt_client = mqtt_client
         self.set_up_config(config_dict)
+        self.connection = None
 
     # `config` can be either a file path or a config dict
     def set_up_config(self, config=None):
@@ -86,13 +89,18 @@ class OBDTracker:
             logger.info("Can't get supported commands while disconnected")
 
     def connect(self, print_info: bool = True):
-        self.connection = obd.Async()
+        try:
+            self.connection = obd.Async()
+        except SerialException as serialExc:
+            logger.error(
+                "Error while trying to connect to the OBD port.\nDetails: {}".format(serialExc))
+            return False
         if print_info:
             self.print_supported_commands()
 
-        if self.connection is None or not self.connection.is_connected():
+        if self.connection is not None or not self.connection.is_connected():
             logger.warning("Unable to subscribe to the OBD messages")
-            self.shut_down()
+            self.shutdown()
             return
         self.watch_obd_messages()
         # Start the asynchronous event loop
@@ -113,8 +121,12 @@ class OBDTracker:
         callback_func = self.obd_response_callback_log if self.job is 'log' else self.obd_response_callback_publish
         # @TODO Check if obd_message is within the obd.commands
         for obd_message in self.obd_messages:
-            self.connection.watch(
-                obd.commands[obd_message], callback=callback_func)
+            if obd_message in obd.commands:
+                self.connection.watch(
+                    obd.commands[obd_message], callback=callback_func)
+            else:
+                logger.warning(
+                    "Topic is not in the OBD Command List. Topic: {}".format(obd_message))
         return True
 
     def obd_response_callback_log(self, response: obd.OBDResponse):
@@ -134,6 +146,8 @@ class OBDTracker:
             topic=obd_message_name, payload=response.value)
 
     def test_query(self):
+        if self.connection is None:
+            return
         logger.info("[TEST] Querying the car. Status: {}".format(
             self.connection.status()))
         rpm_cmd = obd.commands['RPM']
@@ -143,10 +157,20 @@ class OBDTracker:
     def set_mqtt_client(self, mqtt_client: MqttClient):
         self.mqtt_client = mqtt_client
 
-    def shut_down(self, reason: str = None):
+    def shutdown(self, reason: str = None):
         logger.info(
             "Shutting down the OBD connection. Reason = {}".format(reason))
-        self.connection.close()
+        if self.connection is not None:
+            self.connection.close()
+
+    def send_message(self, arb_id, data):
+        pass
+
+    def listen_async(self):
+        pass
+
+    def stop_listener(self):
+        pass
 
 
 if __name__ == "__main__":
@@ -159,5 +183,5 @@ if __name__ == "__main__":
     import asyncio
     loop = asyncio.get_event_loop()
     loop.run_forever()
-    obd_tracker.shut_down()
+    obd_tracker.shutdown()
     logger.info("End of line")

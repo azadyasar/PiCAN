@@ -1,50 +1,48 @@
 from obd_listener import OBDTracker
+from avl_can import CANClient
 from mqtt import MqttClient
+from KeyboardListener import KeyboardListener
 import logging as logger
-from pynput import keyboard
+import sys
+
+import argparse
 
 logger.getLogger(__name__).setLevel(logger.INFO)
 
-
-def on_press(key: keyboard.Key):
-    # try:
-    #     print('Alphanumeric key {0} pressed'.format(key.char))
-    # except AttributeError:
-    #     print('Special key {0} pressed'.format(key))
-    pass
-
-
-def on_release(key: keyboard.Key):
-    if key == keyboard.Key.esc:
-        # Stop listener
-        return False
-
-
-def start():
-    with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
-        listener.join()
-
-
 if __name__ == "__main__":
-    logger.info("########## OBD Tracker ##########")
+    logger.info("########## OBD/CAN Listener ##########")
 
-    logger.info("MqttClient is connecting to the broker")
-    mqtt_client = MqttClient()
-    mqtt_client.connect()
+    parser = argparse.ArgumentParser()
+    parser.add_argument("-b", "--backend", type=str, default="can")
+    parser.add_argument("-mqtt", "--usemqtt", type=bool, default=False)
+    args = vars(parser.parse_args())
 
-    obd_tracker = OBDTracker(mqtt_client=mqtt_client)
-    obd_tracker.connect()
-    obd_tracker.test_query()
+    backend = args["backend"]
+    logger.info("Backend: {}".format(backend))
+    use_mqtt = args["usemqtt"]
+    print(use_mqtt)
+    mqtt_client = None
+    if use_mqtt is True:
+        logger.info("MqttClient is connecting to the broker")
+        mqtt_client = MqttClient()
+        mqtt_client.connect()
 
-    start()
+    client = None
+    if backend == "can":
+        client = CANClient()
+        client.connect()
+    elif backend == "obd":
+        client = OBDTracker(mqtt_client=mqtt_client)
+        client.connect()
+        client.test_query()
+    else:
+        logger.warning(
+            "Unknown backend: {}. Possible backends: can, obd".format(backend))
+        sys.exit(1)
 
-    logger.info("Shutting down the OBDTracker...")
-    obd_tracker.shut_down(reason="Shut down requested")
-    logger.info("Shutting down the MqttClient...")
-    mqtt_client.shut_down()
+    keyboard_listener = KeyboardListener(client=client)
 
-    # import asyncio
-    # loop = asyncio.get_event_loop()
-    # loop.run_forever()
-    # obd_tracker.shut_down()
-    logger.info("Program exiting...")
+    keyboard_listener.start()
+    logger.info("Stopped listening. Cleaning up..")
+    if mqtt_client is not None:
+        mqtt_client.shutdown()

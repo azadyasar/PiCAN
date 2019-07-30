@@ -3,20 +3,21 @@ Initialize with a YAML config filepath. Parses and returns
 the config YAML file as a dict object
 
 """
+try:
+    from .can_constants import CAN_CONSTANTS
+except ImportError:
+    from can_constants import CAN_CONSTANTS
 import os
 import yaml
 import logging
 
 logging.getLogger().setLevel(logging.INFO)
 
-CAN_CONFIG_FILEPATH = os.path.dirname(
-    os.path.realpath(__file__)) + "/config_can.yaml"
-
 
 class Config:
 
     def __init__(self, filename: str = None):
-        self.filename = CAN_CONFIG_FILEPATH if filename is None else filename
+        self.filename = CAN_CONSTANTS.CONFIG_FILEPATH if filename is None else filename
 
     def set_filename(self, filename):
         self.filename = filename

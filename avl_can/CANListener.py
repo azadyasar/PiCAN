@@ -5,9 +5,16 @@ import signal
 
 from threading import Thread
 import threading
-from CANMessage import CANMessage
 
-from can_constants import CAN_CONSTANTS
+try:
+    from .CANMessage import CANMessage
+except ImportError:
+    from CANMessage import CANMessage
+
+try:
+    from .can_constants import CAN_CONSTANTS
+except ImportError:
+    from can_constants import CAN_CONSTANTS
 
 import logging
 import inspect
@@ -131,10 +138,12 @@ class CANListener:
             logging.info("Shutting down the background loop..")
             self.notifier.stop()
             self.loop.call_soon_threadsafe(self.loop.stop)
-            self.loop.stop()
             self.listener_thread.join()
             self.loop = None
             self.notifier = None
+            self.listener_thread = None
+        else:
+            logging.info("No listeners are running...")
 
     def listen_async_cb(self, msg):
         print(msg)

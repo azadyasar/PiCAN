@@ -9,7 +9,7 @@ import logging as logger
 import asyncio
 from socket import gaierror
 
-from mqtt_constants import CONST as MQTT_CONSTANTS
+from .mqtt_constants import CONST as MQTT_CONSTANTS
 
 logger.getLogger().setLevel(logger.DEBUG)
 
@@ -193,20 +193,23 @@ class MqttClient:
         except gaierror as err:
             logger.error("Error while trying to connect to the {} Status: {}\nDetails: {}".format(
                 self.host, conn_status, err))
-            terminate("Connection error")
+            # terminate("Connection error")
+            return False
         except ValueError as value_err:
             logger.error("Error while trying to connect to the {} Status: {}\nDetailst: {}".format(
                 self.host, conn_status, value_err))
-            terminate(value_err)
+            return False
+            # terminate(value_err)
         except TimeoutError as timeoutError:
             logger.error(
                 "TimeoutError occured.\nDetails: {}".format(timeoutError))
-            terminate("Timeout")
+            return False
+            # terminate("Timeout")
 
         # self.client.loop_forever()
         self.client.loop_start()
 
-    def shut_down(self):
+    def shutdown(self):
         self.client.loop_stop()
         self.client.disconnect()
 
