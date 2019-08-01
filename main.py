@@ -23,8 +23,8 @@ if __name__ == "__main__":
 
     mqtt_client = None
     if use_mqtt is True:
-        logger.info("MqttClient is connecting to the broker")
         mqtt_client = MqttClient()
+        logger.info("{} is connecting to the broker".format(mqtt_client.id))
         mqtt_client.connect()
 
     client = None

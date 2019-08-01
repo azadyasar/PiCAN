@@ -11,7 +11,7 @@ Network:
 # Possible jobs:
 #   - log: to log to the console
 #   - publish: to publish through MQTT
-Job: "log"
+Job: "publish"
 CAN_MESSAGES:
   - desc: eng_speed
     id: 1

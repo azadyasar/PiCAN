@@ -52,6 +52,7 @@ class MqttClient:
                 self.port = mqtt_config[MQTT_CONSTANTS.BROKER_STR][MQTT_CONSTANTS.PORT_STR]
                 self.uname = mqtt_config[MQTT_CONSTANTS.BROKER_STR][MQTT_CONSTANTS.UNAME_STR]
                 self.password = mqtt_config[MQTT_CONSTANTS.BROKER_STR][MQTT_CONSTANTS.PASSWORD_STR]
+                self.prefix = "avl/"
                 self.id = mqtt_config[MQTT_CONSTANTS.CLIENT_STR][MQTT_CONSTANTS.ID_STR]
                 self.sub_topics = mqtt_config[MQTT_CONSTANTS.CLIENT_STR][MQTT_CONSTANTS.SUB_TOPICS_STR]
                 self.pub_topics = mqtt_config[MQTT_CONSTANTS.CLIENT_STR][MQTT_CONSTANTS.PUB_TOPICS_STR]
@@ -93,7 +94,7 @@ class MqttClient:
 
     def on_disconnect(self, client, userdata, rc=0):
         self.is_connected = False
-        logger.info("Disconnecting with result code: {}".format(rc))
+        logger.info("{} disconnected with result code: {}".format(self.id, rc))
         client.loop_stop()
 
     def on_message(self, client, userdata, message):
@@ -182,7 +183,7 @@ class MqttClient:
     5: refused, not authorized
     '''
 
-    def connect(self, will="will not defined"):
+    def connect(self, will=None):
         self.client = mqtt.Client(self.id)
         self.client.on_connect = self.on_connect
         self.client.on_disconnect = self.on_disconnect

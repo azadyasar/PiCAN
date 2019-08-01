@@ -135,7 +135,7 @@ class CANListener:
             logging.warning(
                 "[{}]: Must set bus first".format(func_info.co_name))
             return
-        job_callback_func = self.can_message_log_callback if self.job is CAN_CONSTANTS.JOB_LOG_STR else self.can_message_publish_callback
+        job_callback_func = self.can_message_log_callback if self.job == CAN_CONSTANTS.JOB_LOG_STR else self.can_message_publish_callback
         listeners = [self.update_can_data_callback, job_callback_func]
         asyncio.set_event_loop(asyncio.new_event_loop())
         self.loop = asyncio.get_event_loop()
@@ -157,6 +157,9 @@ class CANListener:
             logging.info("No listeners are running...")
 
     def update_can_data_callback(self, msg: can.Message):
+        print("CAN msg received.")
+        print("typeof msg.data: {}".format(type(msg.data)))
+        print(msg.data)
         if msg.arbitration_id in self.can_data:
             logging.info("Updating watched CAN message: {}".format(msg))
             self.can_data[msg.arbitration_id].update_data(msg.data)
@@ -169,7 +172,7 @@ class CANListener:
 
     # Assumes that the mqtt_client is assigned and working 
     def can_message_publish_callback(self, msg: can.Message):
-        self.mqtt_client.publish(topic=self.msg_id_desc_map[msg.arbitration_id], payload=msg)
+        self.mqtt_client.publish(topic=self.msg_id_desc_map[msg.arbitration_id], payload=msg.data)
 
     def send_message(self, arb_id, data):
         can_message = can.Message(arbitration_id=arb_id, data=data)
