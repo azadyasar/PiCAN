@@ -2,6 +2,7 @@ import can
 from can.bus import BusState
 import asyncio
 import signal
+from mqtt import MqttClient
 
 from threading import Thread
 import threading
@@ -22,16 +23,22 @@ logging.getLogger().setLevel(logging.INFO)
 
 
 class CANListener:
-    def __init__(self, bus, config={}):
+    def __init__(self, bus, config={}, mqtt_client: MqttClient = None):
         self.bus = bus
         self.config = config
         self.listener_thread = None
         self.notifier = None
         self.loop = None
         self.listener_thread = None
+        self.mqtt_client = mqtt_client
         self.construct_id_desc_mapping()
         self.init_can_messages()
         self.construct_message_id_mapping()
+        if CAN_CONSTANTS.JOB_STR in self.config:
+            self.job = self.config[CAN_CONSTANTS.JOB_STR]
+        else:
+            self.job = CAN_CONSTANTS.JOB_LOG_STR
+        logging.info("CAN Listener job = {}".format(self.job))
 
     def construct_id_desc_mapping(self):
         # Stores the CAN message IDs (retrieved from the config.yaml file)
@@ -68,6 +75,9 @@ class CANListener:
 
     def set_bus(self, bus):
         self.bus = bus
+        if self.listener_thread is not None:
+            self.stop_async_listener()
+        self.start_background_listener()
 
     def get_bus(self):
         return self.bus
@@ -125,7 +135,8 @@ class CANListener:
             logging.warning(
                 "[{}]: Must set bus first".format(func_info.co_name))
             return
-        listeners = [self.listen_async_cb]
+        job_callback_func = self.can_message_log_callback if self.job is CAN_CONSTANTS.JOB_LOG_STR else self.can_message_publish_callback
+        listeners = [self.update_can_data_callback, job_callback_func]
         asyncio.set_event_loop(asyncio.new_event_loop())
         self.loop = asyncio.get_event_loop()
         logging.info("Starting the notifier loop...")
@@ -145,9 +156,20 @@ class CANListener:
         else:
             logging.info("No listeners are running...")
 
-    def listen_async_cb(self, msg):
+    def update_can_data_callback(self, msg: can.Message):
+        if msg.arbitration_id in self.can_data:
+            logging.info("Updating watched CAN message: {}".format(msg))
+            self.can_data[msg.arbitration_id].update_data(msg.data)
+        else:
+            logging.info("Skipping CAN message (not watched): {}".format(msg))
+
+    def can_message_log_callback(self, msg: can.Message):
         print(msg)
         CANListener.print_postproc()
+
+    # Assumes that the mqtt_client is assigned and working 
+    def can_message_publish_callback(self, msg: can.Message):
+        self.mqtt_client.publish(topic=self.msg_id_desc_map[msg.arbitration_id], payload=msg)
 
     def send_message(self, arb_id, data):
         can_message = can.Message(arbitration_id=arb_id, data=data)

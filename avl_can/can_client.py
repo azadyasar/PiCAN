@@ -1,16 +1,17 @@
+import can
+import logging
+from mqtt import MqttClient
+
 from .CANListener import CANListener
 from .can_constants import CAN_CONSTANTS
 from .can_config import Config
-
-import can
 from .CANMessage import CANMessage
-import logging
 
 logging.getLogger().setLevel(logging.INFO)
 
 
 class CANClient:
-    def __init__(self):
+    def __init__(self, mqtt_client: MqttClient = None):
         self.config_dict = Config().read_config()
         # logging.info("CAN config file is read: {}".format(self.config_dict))
 
@@ -21,6 +22,7 @@ class CANClient:
         ))
         self.bus = None
         self.can_listener = None
+        self.mqtt_client = mqtt_client
 
     def connect(self):
         try:
@@ -29,10 +31,10 @@ class CANClient:
             logging.info("Connected to the CAN bus.")
         except OSError as osErr:
             logging.error(
-                "Error while connecting to the CAN bus. {}".format(osErr))
+                "Error while connecting to the CAN bus.\nDetails: {}".format(osErr))
             return False
 
-        self.can_listener = CANListener(bus=self.bus, config=self.config_dict)
+        self.can_listener = CANListener(bus=self.bus, config=self.config_dict, mqtt_client=self.mqtt_client)
         return True
 
     def shutdown(self):

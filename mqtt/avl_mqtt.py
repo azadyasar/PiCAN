@@ -73,6 +73,7 @@ class MqttClient:
         self.port = None
         self.uname = None
         self.password = None
+        self.prefix = "avl/"
         self.id = "avl_rpi"
         self.sub_topics = []
         self.pub_topics = []
@@ -117,7 +118,7 @@ class MqttClient:
     def publish(self, topic, payload, qos: int = 0) -> mqtt.MQTTMessageInfo:
         if topic is None:
             return
-        return self.client.publish(topic=topic, payload=payload, qos=qos)
+        return self.client.publish(topic=self.prefix + self.id + "/" + topic, payload=payload, qos=qos)
 
     # Registers a callback to the specified topic. When a message having the specified
     # topic arrives, the callback will be called.

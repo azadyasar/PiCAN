@@ -16,7 +16,7 @@ class KeyboardListener:
             if key.char == 's' or key.char == 'S':
                 data = [randint(0, 15) for i in range(randint(0, 8))]
                 logging.info(
-                    "Sending a random CAN message with data: {}".format(data))
+                    "Generated random CAN message with data: {}".format(data))
                 self.client.send_message(arb_id=100, data=data)
             elif key.char == 'p' or key.char == 'P':
                 logging.info("Pausing the listener...")
@@ -24,6 +24,10 @@ class KeyboardListener:
             elif key.char == 'c' or key.char == 'C':
                 logging.info("Restarting the async listener...")
                 self.client.listen_async()
+            elif key.char == 'r' or key.char == 'R':
+                logging.info("Reconnecting...")
+                self.client.shutdown()
+                self.client.connect()
         except AttributeError:
             pass
         finally:

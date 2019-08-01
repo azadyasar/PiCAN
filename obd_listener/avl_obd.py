@@ -93,7 +93,8 @@ class OBDTracker:
             self.connection = obd.Async()
         except SerialException as serialExc:
             logger.error(
-                "Error while trying to connect to the OBD port.\nDetails: {}".format(serialExc))
+                "Error while connecting to the OBD port.\nDetails: {}".format(serialExc))
+            self.connection = None
             return False
         if print_info:
             self.print_supported_commands()
@@ -103,8 +104,6 @@ class OBDTracker:
             self.shutdown()
             return
         self.watch_obd_messages()
-        # Start the asynchronous event loop
-        self.connection.start()
 
     def watch_obd_messages(self) -> bool:
         if self.job is 'log' and logger.getLogger().level <= logger.INFO:
@@ -163,14 +162,25 @@ class OBDTracker:
         if self.connection is not None:
             self.connection.close()
 
+    """
+    Declared and not implemented because the following functions are required for the KeyboardListener
+    """
     def send_message(self, arb_id, data):
         pass
 
     def listen_async(self):
-        pass
+        if self.connection is not None and self.connection.is_connected():
+            # Start the asynchronous event loop
+            self.connection.start()
+        else:
+            logger.warning("Connect to a OBD Network first!")
 
     def stop_listener(self):
-        pass
+        if self.connection is not None and self.connection.is_connected():
+            # Start the asynchronous event loop
+            self.connection.stop()
+        else:
+            logger.warning("No OBD connections found.")
 
 
 if __name__ == "__main__":

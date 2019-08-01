@@ -20,7 +20,7 @@ if __name__ == "__main__":
     backend = args["backend"]
     logger.info("Backend: {}".format(backend))
     use_mqtt = args["usemqtt"]
-    print(use_mqtt)
+
     mqtt_client = None
     if use_mqtt is True:
         logger.info("MqttClient is connecting to the broker")
@@ -29,7 +29,7 @@ if __name__ == "__main__":
 
     client = None
     if backend == "can":
-        client = CANClient()
+        client = CANClient(mqtt_client=mqtt_client)
         client.connect()
     elif backend == "obd":
         client = OBDTracker(mqtt_client=mqtt_client)

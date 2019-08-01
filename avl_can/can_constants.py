@@ -13,3 +13,7 @@ class CAN_CONSTANTS:
     ID_STR = "id"
     DESC_STR = "desc"
     REL_BYTES_STR = "rel_bytes"
+    JOB_STR = "Job"
+    JOB_LOG_STR = "log"
+    JOB_PUBLISH_STR = "publish"
+

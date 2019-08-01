@@ -8,6 +8,10 @@ Network:
   #   - PCAN_USBBUS1: use with pcan
   channel: "PCAN_USBBUS1"
   bitrate: 1000000
+# Possible jobs:
+#   - log: to log to the console
+#   - publish: to publish through MQTT
+Job: "log"
 CAN_MESSAGES:
   - desc: eng_speed
     id: 1
