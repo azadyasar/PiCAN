@@ -7,18 +7,12 @@ from mqtt import MqttClient
 
 from serial.serialutil import SerialException
 
+try:
+    from .obd_constants import OBD_CONSTANTS
+except ImportError:
+    from obd_constants import OBD_CONSTANTS
+
 logger.getLogger(__name__).setLevel(logger.DEBUG)
-
-OBD_CONFIG_FILEPATH = os.path.dirname(
-    os.path.realpath(__file__)) + "/config_obd.yaml"
-
-# Config keyword
-OBD_STR = "OBD"
-MESSAGES_STR = "messages"
-ID_STR = "ID"
-JOB_STR = "job"
-JOB_LOG_STR = "log"
-JOB_PUBLISH_STR = "publish"
 
 
 def terminate(msg="No message provided"):
@@ -68,14 +62,14 @@ class OBDTracker:
     # `config` can be either a file path or a config dict
     def set_up_config(self, config=None):
         if config is None:
-            config = OBD_CONFIG_FILEPATH
+            config = OBD_CONSTANTS.OBD_CONFIG_FILEPATH
         if isinstance(config, str):
             config = OBDConfig.read_config_st(config)
         self.config = config
-        self.id = config[OBD_STR][ID_STR]
-        self.job = config[OBD_STR][JOB_STR]
+        self.id = config[OBD_CONSTANTS.OBD_STR][OBD_CONSTANTS.ID_STR]
+        self.job = config[OBD_CONSTANTS.OBD_STR][OBD_CONSTANTS.JOB_STR]
         logger.info("OBDTracker job: {}".format(self.job))
-        self.obd_messages = config[OBD_STR][MESSAGES_STR]
+        self.obd_messages = config[OBD_CONSTANTS.OBD_STR][OBD_CONSTANTS.MESSAGES_STR]
 
         self.obd_response_value_dict = {}
         for obd_message in self.obd_messages:
@@ -117,7 +111,7 @@ class OBDTracker:
 
         logger.info("OBD tracker subscribing to the following OBD messages: {}".format(
             self.obd_messages))
-        callback_func = self.obd_response_callback_log if self.job is 'log' else self.obd_response_callback_publish
+        callback_func = self.obd_response_callback_log if self.job is OBD_CONSTANTS.JOB_LOG_STR else self.obd_response_callback_publish
         # @TODO Check if obd_message is within the obd.commands
         for obd_message in self.obd_messages:
             if obd_message in obd.commands:
@@ -184,7 +178,7 @@ class OBDTracker:
 
 
 if __name__ == "__main__":
-    config = OBDConfig(OBD_CONFIG_FILEPATH)
+    config = OBDConfig(OBD_CONSTANTS.OBD_CONFIG_FILEPATH)
     config_dict = config.read_config()
 
     obd_tracker = OBDTracker(config_dict)

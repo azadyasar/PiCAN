@@ -11,11 +11,13 @@ Network:
 # Possible jobs:
 #   - log: to log to the console
 #   - publish: to publish through MQTT
-Job: "publish"
+Job: "log"
 CAN_MESSAGES:
   - desc: eng_speed
     id: 1
     rel_bytes: [2, 4]
+  - desc: speed
+    id: 2
   - desc: torque
     id: 2
     rel_bytes: [4]

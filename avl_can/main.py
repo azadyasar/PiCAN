@@ -1,11 +1,19 @@
-from CANListener import CANListener
-from can_config import Config
+try: 
+    from .CANListener import CANListener
+    from .can_config import Config
+    from .can_constants import CAN_CONSTANTS
+    from .CANKeyboardListener import CANKeyboardListener
+except ImportError:
+    from CANListener import CANListener
+    from can_config import Config
+    from can_constants import CAN_CONSTANTS
+    from CANKeyboardListener import CANKeyboardListener
+
 import sys
 import can
 import logging
 
-from can_constants import CAN_CONSTANTS
-from CANKeyboardListener import CANKeyboardListener
+
 
 logging.getLogger().setLevel(logging.INFO)
 
