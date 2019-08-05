@@ -29,11 +29,11 @@ class OBDConfig:
             with open(self.filepath, "r") as stream:
                 return yaml.safe_load(stream)
         except FileNotFoundError as ioErr:
-            logger.error("OBD Config file not found in {}\nDetails: {}".format(
+            logger.error("OBD Config file not found in {}\n\tDetails: {}".format(
                 self.filepath, ioErr))
             terminate(ioErr)
         except yaml.YAMLError as yaml_err:
-            logger.error("Error occured while parsing {}\nDetails: {}".format(
+            logger.error("Error occured while parsing {}\n\tDetails: {}".format(
                 self.filepath, yaml_err))
             terminate()
 
@@ -43,11 +43,11 @@ class OBDConfig:
             with open(filepath, "r") as stream:
                 return yaml.safe_load(stream)
         except FileNotFoundError as ioErr:
-            logger.error("OBD Config file not found in {}\nDetails: {}".format(
+            logger.error("OBD Config file not found in {}\n\tDetails: {}".format(
                 filepath, ioErr))
             terminate(ioErr)
         except yaml.YAMLError as yaml_err:
-            logger.error("Error occured while parsing {}\nDetails: {}".format(
+            logger.error("Error occured while parsing {}\n\tDetails: {}".format(
                 filepath, yaml_err))
             terminate()
 
@@ -77,24 +77,24 @@ class OBDTracker:
 
     def print_supported_commands(self):
         if self.connection is not None and self.connection.is_connected():
-            logger.info("Supported commands: {}".format(
+            logger.info("OBD supported commands: {}".format(
                 self.connection.supported_commands))
         else:
-            logger.info("Can't get supported commands while disconnected")
+            logger.info("Can't get supported commands while disconnected.")
 
     def connect(self, print_info: bool = True):
         try:
             self.connection = obd.Async()
         except SerialException as serialExc:
             logger.error(
-                "Error while connecting to the OBD port.\nDetails: {}".format(serialExc))
+                "Error while connecting to the OBD port.\n\tDetails: {}".format(serialExc))
             self.connection = None
             return False
         if print_info:
             self.print_supported_commands()
 
-        if self.connection is not None or not self.connection.is_connected():
-            logger.warning("Unable to subscribe to the OBD messages")
+        if not (self.connection is not None and  self.connection.is_connected()):
+            logger.warning("Unable to connect and  to the OBD messages")
             self.shutdown()
             return
         self.watch_obd_messages()
@@ -111,7 +111,7 @@ class OBDTracker:
 
         logger.info("OBD tracker subscribing to the following OBD messages: {}".format(
             self.obd_messages))
-        callback_func = self.obd_response_callback_log if self.job is OBD_CONSTANTS.JOB_LOG_STR else self.obd_response_callback_publish
+        callback_func = self.obd_response_callback_log if self.job == OBD_CONSTANTS.JOB_LOG_STR else self.obd_response_callback_publish
         # @TODO Check if obd_message is within the obd.commands
         for obd_message in self.obd_messages:
             if obd_message in obd.commands:

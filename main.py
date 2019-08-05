@@ -15,17 +15,20 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--backend", type=str, default="can")
     parser.add_argument("-mqtt", "--usemqtt", type=bool, default=False)
+    parser.add_argument("-s", "--secure", type=bool, default=False)
     args = vars(parser.parse_args())
 
     backend = args["backend"]
     logger.info("Backend: {}".format(backend))
+    
     use_mqtt = args["usemqtt"]
-
     mqtt_client = None
     if use_mqtt is True:
         mqtt_client = MqttClient()
         logger.info("{} is connecting to the broker".format(mqtt_client.id))
         mqtt_client.connect()
+
+    is_secured = args["secure"]
 
     client = None
     if backend == "can":
@@ -40,7 +43,7 @@ if __name__ == "__main__":
             "Unknown backend: {}. Possible backends: can, obd".format(backend))
         sys.exit(1)
 
-    keyboard_listener = KeyboardListener(client=client)
+    keyboard_listener = KeyboardListener(client, is_secured)
 
     keyboard_listener.start()
     logger.info("Stopped listening. Cleaning up..")

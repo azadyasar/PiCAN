@@ -7,18 +7,22 @@ from obd_listener import OBDTracker
 
 
 class KeyboardListener:
-    def __init__(self, client: CANClient or OBDTracker):
+    def __init__(self, client: CANClient or OBDTracker, is_secured: bool = False):
         self.client = client
         self.keyboard_listener = None
+        self.is_secured = is_secured
 
     def on_press(self, key: keyboard.Key):
         try:
             if key.char == 's' or key.char == 'S':
-                data = [randint(0, 15) for i in range(randint(0, 8))]
-                id = randint(0, 255)
-                logging.info(
-                    "Generated random CAN message with id: {} and data: {}".format(id, data))
-                self.client.send_message(arb_id=id, data=data)
+                if self.is_secured:
+                    data = [randint(0, 15) for i in range(randint(0, 8))]
+                    id = randint(0, 255)
+                    logging.info(
+                        "Generated random CAN message with id: {} and data: {}".format(id, data))
+                    self.client.send_message(arb_id=id, data=data)
+                else:
+                    logging.info("You're running in insecure mode. Run with -s flag on to send messages into the network.")
             elif key.char == 'p' or key.char == 'P':
                 logging.info("Pausing the listener...")
                 self.client.stop_listener()

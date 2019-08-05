@@ -31,7 +31,7 @@ class CANClient:
             logging.info("Connected to the CAN bus.")
         except OSError as osErr:
             logging.error(
-                "Error while connecting to the CAN bus.\nDetails: {}".format(osErr))
+                "Error while connecting to the CAN bus.\n\tDetails: {}".format(osErr))
             return False
 
         self.can_listener = CANListener(bus=self.bus, config=self.config_dict, mqtt_client=self.mqtt_client)

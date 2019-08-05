@@ -32,12 +32,12 @@ class Config:
                 try:
                     return yaml.safe_load(stream)
                 except yaml.YAMLError as error:
-                    print("Error occured while parsing {}\nDetails: {}".format(
+                    print("Error occured while parsing {}\n\tDetails: {}".format(
                         self.filepath, error))
                     return None
         except FileNotFoundError as ioErr:
             logger.error(
-                "MQTT config file not found\nDetails: {}".format(ioErr))
+                "MQTT config file not found\n\tDetails: {}".format(ioErr))
             terminate()
 
 
@@ -59,7 +59,7 @@ class MqttClient:
                 self.hb_period = mqtt_config[MQTT_CONSTANTS.CLIENT_STR][MQTT_CONSTANTS.HEARTBEAT_PERIOD_STR]
             except KeyError as key_error:
                 logger.error(
-                    "Error while reading the config file -{}-.\nDetails: {} attribute is not properly set".format(MQTT_CONSTANTS.MQTT_CONFIG_FILEPATH, key_error))
+                    "Error while reading the config file -{}-.\n\tDetails: {} attribute is not properly set".format(MQTT_CONSTANTS.MQTT_CONFIG_FILEPATH, key_error))
                 self.init_attributes_default()
         else:
             self.init_attributes_default()
@@ -165,7 +165,7 @@ class MqttClient:
         try:
             self.sub_topics.remove(_topic)
         except ValueError as valueErr:
-            logger.warning("Requested subscribe topic [{}] does not exist in the sub_topic list.\nDetails: {}".format(
+            logger.warning("Requested subscribe topic [{}] does not exist in the sub_topic list.\n\tDetails: {}".format(
                 _topic, valueErr))
             pass
 
@@ -196,18 +196,18 @@ class MqttClient:
         try:
             conn_status = self.client.connect(self.host, self.port)
         except gaierror as err:
-            logger.error("Error while trying to connect to the {} Status: {}\nDetails: {}".format(
+            logger.error("Error while trying to connect to the {} Status: {}\n\tDetails: {}".format(
                 self.host, conn_status, err))
             # terminate("Connection error")
             return False
         except ValueError as value_err:
-            logger.error("Error while trying to connect to the {} Status: {}\nDetailst: {}".format(
+            logger.error("Error while trying to connect to the {} Status: {}\n\tDetailst: {}".format(
                 self.host, conn_status, value_err))
             return False
             # terminate(value_err)
         except TimeoutError as timeoutError:
             logger.error(
-                "TimeoutError occured.\nDetails: {}".format(timeoutError))
+                "TimeoutError occured.\n\tDetails: {}".format(timeoutError))
             return False
             # terminate("Timeout")
 
