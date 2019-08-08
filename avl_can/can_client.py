@@ -11,12 +11,14 @@ logging.getLogger().setLevel(logging.INFO)
 
 
 class CANClient:
-    def __init__(self, mqtt_client: MqttClient = None):
+    def __init__(self, mqtt_client: MqttClient = None, bitrate: int = None):
         self.config_dict = Config().read_config()
         # logging.info("CAN config file is read: {}".format(self.config_dict))
 
         self.bustype, self.channel, self.bitrate = self.config_dict[CAN_CONSTANTS.NETWORK_STR][CAN_CONSTANTS.BUSTYPE_STR], self.config_dict[CAN_CONSTANTS.NETWORK_STR][
             CAN_CONSTANTS.CHANNEL_STR], self.config_dict[CAN_CONSTANTS.NETWORK_STR][CAN_CONSTANTS.BITRATE_STR]
+        if bitrate is not None:
+            self.bitrate = bitrate
         logging.info("CAN connection parameters: Bustype: {}, Channel: {}, Bitrate: {}".format(
             self.bustype, self.channel, self.bitrate
         ))
@@ -53,6 +55,20 @@ class CANClient:
             logging.warning("No CAN listeners found.")
             return
         self.can_listener.stop_async_listener()
+
+    def watch(self):
+        if self.can_listener is None:
+            logging.warning("No CAN listeners found.")
+            return
+        self.can_listener.stop_async_listener(inside_call=True)
+        self.can_listener.start_watcher()
+
+    def stop_watcher(self):
+        if self.can_listener is None:
+            logging.warning("No CAN listeners found.")
+            return
+        self.can_listener.stop_watcher()
+
 
     def send_message(self, arb_id, data):
         if self.bus is None:

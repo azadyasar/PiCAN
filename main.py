@@ -16,6 +16,7 @@ if __name__ == "__main__":
     parser.add_argument("-b", "--backend", type=str, default="can")
     parser.add_argument("-mqtt", "--usemqtt", type=bool, default=False)
     parser.add_argument("-s", "--secure", type=bool, default=False)
+    parser.add_argument("-br", "--bitrate", type=int, default=None)
     args = vars(parser.parse_args())
 
     backend = args["backend"]
@@ -30,9 +31,11 @@ if __name__ == "__main__":
 
     is_secured = args["secure"]
 
+    bitrate = args["bitrate"]
+
     client = None
     if backend == "can":
-        client = CANClient(mqtt_client=mqtt_client)
+        client = CANClient(mqtt_client=mqtt_client, bitrate=bitrate)
         client.connect()
     elif backend == "obd":
         client = OBDTracker(mqtt_client=mqtt_client)

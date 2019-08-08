@@ -11,10 +11,17 @@ class KeyboardListener:
         self.client = client
         self.keyboard_listener = None
         self.is_secured = is_secured
+        self._is_shift_pressed = False
+        self._COMBINATIONS = [
+            {keyboard.Key.shift, keyboard.KeyCode(char='c')}
+        ]
 
     def on_press(self, key: keyboard.Key):
+        if key == keyboard.Key.shift:
+            self._is_shift_pressed = True
+            return
         try:
-            if key.char == 's' or key.char == 'S':
+            if (key.char == 's' or key.char == 'S') and self._is_shift_pressed:
                 if self.is_secured:
                     data = [randint(0, 15) for i in range(randint(0, 8))]
                     id = randint(0, 255)
@@ -23,13 +30,17 @@ class KeyboardListener:
                     self.client.send_message(arb_id=id, data=data)
                 else:
                     logging.info("You're running in insecure mode. Run with -s flag on to send messages into the network.")
-            elif key.char == 'p' or key.char == 'P':
+            elif (key.char == 'w' or key.char == 'W') and self._is_shift_pressed:
+                self.client.watch()
+            elif (key.char == 'q' or key.char == 'Q') and self._is_shift_pressed:
+                self.client.stop_watcher()
+            elif (key.char == 'p' or key.char == 'P') and self._is_shift_pressed:
                 logging.info("Pausing the listener...")
                 self.client.stop_listener()
-            elif key.char == 'c' or key.char == 'C':
+            elif (key.char == 'c' or key.char == 'C') and self._is_shift_pressed:
                 logging.info("Restarting the async listener...")
                 self.client.listen_async()
-            elif key.char == 'r' or key.char == 'R':
+            elif (key.char == 'r' or key.char == 'R') and self._is_shift_pressed:
                 logging.info("Reconnecting...")
                 self.client.shutdown()
                 self.client.connect()
@@ -39,6 +50,9 @@ class KeyboardListener:
             pass
 
     def on_release(self, key: keyboard.Key):
+        if key == keyboard.Key.shift:
+            self._is_shift_pressed = False 
+            return
         if key == keyboard.Key.esc:
             logging.info("Exiting...")
             self.keyboard_listener.stop()
