@@ -4,6 +4,7 @@ from random import randint
 
 from avl_can import CANClient
 from obd_listener import OBDTracker
+from can.interfaces.pcan.pcan import PcanError
 
 
 class KeyboardListener:
@@ -39,7 +40,10 @@ class KeyboardListener:
                 self.client.stop_listener()
             elif (key.char == 'c' or key.char == 'C') and self._is_shift_pressed:
                 logging.info("Restarting the async listener...")
-                self.client.listen_async()
+                try:
+                    self.client.listen_async()
+                except PcanError as pcanErr:
+                    logging.error("Error occured while trying to listen to the CAN bus.\n\tDetais: {}".format(pcanErr))
             elif (key.char == 'r' or key.char == 'R') and self._is_shift_pressed:
                 logging.info("Reconnecting...")
                 self.client.shutdown()

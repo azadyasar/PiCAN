@@ -3,7 +3,7 @@ from can.bus import BusState
 import asyncio
 import signal
 from mqtt import MqttClient
-
+import time
 from threading import Thread
 import threading
 
@@ -33,6 +33,7 @@ class CANListener:
         self.watcher_thread = None
         self.watcher_loop = None
         self.watcher_notifier = None
+        self._watcher_start_time = None
         self.watched_msg_counter = 0
         self.mqtt_client = mqtt_client
         self.construct_id_desc_mapping()
@@ -192,6 +193,7 @@ class CANListener:
             self.stop_watcher()
         self.watcher_thread = Thread(target=self.watch_async)
         self.watcher_thread.start()
+        self._watcher_start_time = time.time()
         return self.watcher_thread
 
     def watch_async(self):
@@ -205,8 +207,9 @@ class CANListener:
             self.watcher_loop.run_forever()
 
     def watch_counter(self, msg: can.Message):
+        elapsed_time = time.time() - self._watcher_start_time
         self.watched_msg_counter += 1
-        print("# of messages received: {}".format(self.watched_msg_counter), end="\r", flush=True)
+        print("# of messages received: {0} in {1:.4f} secs".format(self.watched_msg_counter, elapsed_time), end="\r", flush=True)
 
     def stop_watcher(self):
         print("")

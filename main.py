@@ -30,6 +30,8 @@ if __name__ == "__main__":
         mqtt_client.connect()
 
     is_secured = args["secure"]
+    if is_secured:
+        logger.info("You are running in secure mode which means you can publish messages into the CAN bus.")
 
     bitrate = args["bitrate"]
 
