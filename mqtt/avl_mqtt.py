@@ -8,11 +8,14 @@ import re
 # _pattern_type is no longer available starting from version 3.7
 if sys.version_info[1] >= 7:
     re._pattern_type = re.Pattern
+from pynput import keyboard
 import logging as logger
 import asyncio
 from socket import gaierror
-
-from .mqtt_constants import CONST as MQTT_CONSTANTS
+try:
+    from .mqtt_constants import CONST as MQTT_CONSTANTS
+except ImportError:
+    from mqtt_constants import CONST as MQTT_CONSTANTS
 
 logger.getLogger().setLevel(logger.DEBUG)
 
@@ -21,6 +24,45 @@ def terminate(msg="No message provided"):
     logger.warning("Terminating... [Message]: {}".format(msg))
     sys.exit(1)
 
+class MQTTKeyboardListener:
+    def __init__(self, mqtt):
+        self.mqtt = mqtt
+        self.keyboard_listener = None
+
+    def on_press(self, key: keyboard.Key):
+        try:
+            if key.char == 's' or key.char == 'S':
+                if self.mqtt:
+                    if not self.mqtt.is_connected:
+                        logger.info("MQTT Client is not connected. Can't publish.")
+                        return
+                else:
+                    logger.info("MQTT Client is not initialized.")
+                    return
+
+                # print("Topic: ")
+                # topic = input()
+                # print("Message: ")
+                # message = input()
+                print("Publishing +/+/test - Hello")
+                self.mqtt.publish(topic="test", payload="Hello")
+        except AttributeError:
+            pass 
+        finally:
+            pass
+    
+    def on_release(self, key: keyboard.Key):
+        if key == keyboard.Key.esc:
+            logger.info("Exiting...")
+            self.keyboard_listener.stop()
+            return False
+
+    def start(self):
+        with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as key_listener:
+            self.keyboard_listener = key_listener
+            logger.info("Keyboard listener is activated.")
+            key_listener.join()
+            self.mqtt.shutdown()
 
 class Config:
     def __init__(self, filepath):
@@ -118,8 +160,9 @@ class MqttClient:
 
     def publish(self, topic, payload, qos: int = 0) -> mqtt.MQTTMessageInfo:
         if topic is None:
+            logger.warning("Can't publish messages with no topic.")
             return
-        return self.client.publish(topic=self.prefix + self.id + "/" + topic, payload=payload, qos=qos)
+        return self.client.publish(topic=self.prefix + topic, payload=payload, qos=qos)
 
     # Registers a callback to the specified topic. When a message having the specified
     # topic arrives, the callback will be called.
@@ -193,6 +236,7 @@ class MqttClient:
             logger.info("Setting will of the client: {}".format(will))
             self.client.will_set("will", payload=will, qos=2, retain=False)
         conn_status = -1
+        logger.info("Connecting to the {}".format(self.host))
         try:
             conn_status = self.client.connect(self.host, self.port)
         except gaierror as err:
@@ -258,8 +302,7 @@ if __name__ == "__main__":
 
     # Testing if registration within the MqttClient works.
     # Remove once deployed to production
-    test_mqtt_registration(mqtt_client)
+    # test_mqtt_registration(mqtt_client)
 
-    loop = asyncio.get_event_loop()
-    loop.run_forever()
-    logger.info("End of line")
+    mqtt_keyboard_listener = MQTTKeyboardListener(mqtt_client)
+    mqtt_keyboard_listener.start()
