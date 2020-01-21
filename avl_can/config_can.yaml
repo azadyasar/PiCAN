@@ -7,7 +7,7 @@ Network:
   #   - can0: use with socketcan
   #   - PCAN_USBBUS1: use with pcan
   channel: "PCAN_USBBUS1"
-  bitrate: 1000000
+  bitrate: 500000
 # Possible jobs:
 #   - log: to log to the console
 #   - publish: to publish through MQTT
