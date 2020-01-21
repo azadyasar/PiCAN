@@ -21,7 +21,7 @@ if __name__ == "__main__":
 
     backend = args["backend"]
     logger.info("Backend: {}".format(backend))
-    
+
     use_mqtt = args["usemqtt"]
     mqtt_client = None
     if use_mqtt is True:
@@ -31,7 +31,8 @@ if __name__ == "__main__":
 
     is_secured = args["secure"]
     if is_secured:
-        logger.info("You are running in secure mode which means you can publish messages into the CAN bus.")
+        logger.info(
+            "You are running in secure mode which means you can publish messages into the CAN bus.")
 
     bitrate = args["bitrate"]
 
@@ -48,8 +49,8 @@ if __name__ == "__main__":
             "Unknown backend: {}. Possible backends: can, obd".format(backend))
         sys.exit(1)
 
+    # keyboard_listener = KeyboardListener(client, is_secured)
     keyboard_listener = KeyboardListener(client, is_secured)
-
     keyboard_listener.start()
     logger.info("Stopped listening. Cleaning up..")
     if mqtt_client is not None:
