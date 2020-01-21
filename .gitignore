@@ -3,3 +3,4 @@ __pycache__/
 mqtt/src/config_mqtt.yaml
 .vscode
 *.png
+*.pyc

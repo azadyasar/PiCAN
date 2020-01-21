@@ -3,7 +3,7 @@ try:
     from .can_config import Config
     from .can_constants import CAN_CONSTANTS
     from .CANKeyboardListener import CANKeyboardListener
-except ImportError:
+except:
     from CANListener import CANListener
     from can_config import Config
     from can_constants import CAN_CONSTANTS
