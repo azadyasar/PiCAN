@@ -1,3 +1,6 @@
+from socket import gaierror
+import asyncio
+import logging as logger
 import sys
 import os
 import yaml
@@ -8,10 +11,7 @@ import re
 # _pattern_type is no longer available starting from version 3.7
 if sys.version_info[1] >= 7:
     re._pattern_type = re.Pattern
-from pynput import keyboard
-import logging as logger
-import asyncio
-from socket import gaierror
+# from pynput import keyboard
 try:
     from .mqtt_constants import CONST as MQTT_CONSTANTS
 except ImportError:
@@ -24,45 +24,48 @@ def terminate(msg="No message provided"):
     logger.warning("Terminating... [Message]: {}".format(msg))
     sys.exit(1)
 
-class MQTTKeyboardListener:
-    def __init__(self, mqtt):
-        self.mqtt = mqtt
-        self.keyboard_listener = None
 
-    def on_press(self, key: keyboard.Key):
-        try:
-            if key.char == 's' or key.char == 'S':
-                if self.mqtt:
-                    if not self.mqtt.is_connected:
-                        logger.info("MQTT Client is not connected. Can't publish.")
-                        return
-                else:
-                    logger.info("MQTT Client is not initialized.")
-                    return
+# class MQTTKeyboardListener:
+#     def __init__(self, mqtt):
+#         self.mqtt = mqtt
+#         self.keyboard_listener = None
 
-                # print("Topic: ")
-                # topic = input()
-                # print("Message: ")
-                # message = input()
-                print("Publishing +/+/test - Hello")
-                self.mqtt.publish(topic="test", payload="Hello")
-        except AttributeError:
-            pass 
-        finally:
-            pass
-    
-    def on_release(self, key: keyboard.Key):
-        if key == keyboard.Key.esc:
-            logger.info("Exiting...")
-            self.keyboard_listener.stop()
-            return False
+#     def on_press(self, key: keyboard.Key):
+#         try:
+#             if key.char == 's' or key.char == 'S':
+#                 if self.mqtt:
+#                     if not self.mqtt.is_connected:
+#                         logger.info(
+#                             "MQTT Client is not connected. Can't publish.")
+#                         return
+#                 else:
+#                     logger.info("MQTT Client is not initialized.")
+#                     return
 
-    def start(self):
-        with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as key_listener:
-            self.keyboard_listener = key_listener
-            logger.info("Keyboard listener is activated.")
-            key_listener.join()
-            self.mqtt.shutdown()
+#                 # print("Topic: ")
+#                 # topic = input()
+#                 # print("Message: ")
+#                 # message = input()
+#                 print("Publishing +/+/test - Hello")
+#                 self.mqtt.publish(topic="test", payload="Hello")
+#         except AttributeError:
+#             pass
+#         finally:
+#             pass
+
+#     def on_release(self, key: keyboard.Key):
+#         if key == keyboard.Key.esc:
+#             logger.info("Exiting...")
+#             self.keyboard_listener.stop()
+#             return False
+
+#     def start(self):
+#         with keyboard.Listener(on_press=self.on_press, on_release=self.on_release) as key_listener:
+#             self.keyboard_listener = key_listener
+#             logger.info("Keyboard listener is activated.")
+#             key_listener.join()
+#             self.mqtt.shutdown()
+
 
 class Config:
     def __init__(self, filepath):
@@ -304,5 +307,5 @@ if __name__ == "__main__":
     # Remove once deployed to production
     # test_mqtt_registration(mqtt_client)
 
-    mqtt_keyboard_listener = MQTTKeyboardListener(mqtt_client)
+    # mqtt_keyboard_listener = MQTTKeyboardListener(mqtt_client)
     mqtt_keyboard_listener.start()

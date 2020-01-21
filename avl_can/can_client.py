@@ -36,7 +36,8 @@ class CANClient:
                 "Error while connecting to the CAN bus.\n\tDetails: {}".format(osErr))
             return False
 
-        self.can_listener = CANListener(bus=self.bus, config=self.config_dict, mqtt_client=self.mqtt_client)
+        self.can_listener = CANListener(
+            bus=self.bus, config=self.config_dict, mqtt_client=self.mqtt_client)
         return True
 
     def shutdown(self):
@@ -68,7 +69,6 @@ class CANClient:
             logging.warning("No CAN listeners found.")
             return
         self.can_listener.stop_watcher()
-
 
     def send_message(self, arb_id, data):
         if self.bus is None:
