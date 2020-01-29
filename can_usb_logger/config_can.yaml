@@ -1,0 +1,16 @@
+Network:
+  # Possible bustypes:
+  #   - socketcan: to use native socketcan driver. (on Linux)
+  #   - pcan: to used PEAK CAN intercase. (You should have the PCANBasic.dll)
+  bustype: "socketcan"
+  # Possible channels:
+  #   - can0: use with socketcan
+  #   - PCAN_USBBUS1: use with pcan
+  channel: "can0"
+  bitrate: 500000
+# Possible jobs:
+#   - log: to log to the console
+#   - publish: to publish through MQTT
+Job: "log"
+# CAN Message IDs to log
+CAN_MESSAGES: [1, 124]
