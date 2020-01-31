@@ -152,6 +152,9 @@ class CANListener:
         self.can_batch_data_lock.acquire()
         self.can_batch_data.append(can_data)
         self.can_batch_data_lock.release()
+        thr = threading.Timer(0.25, self.log)
+        thr.setDaemon(True)
+        thr.start()
 
     def save(self):
         if not self.logging_:
@@ -165,6 +168,9 @@ class CANListener:
         self.usbWriter.writeLine(self.can_batch_data)
         self.can_batch_data.clear()
         self.can_batch_data_lock.release()
+        thr = threading.Timer(5, self.save)
+        thr.setDaemon(True)
+        thr.start()
 
     def stop_async_listener(self, inside_call: bool = False):
         if self.notifier is not None:
