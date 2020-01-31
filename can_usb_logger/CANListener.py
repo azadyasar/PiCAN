@@ -185,6 +185,7 @@ class CANListener:
         if self.notifier is not None:
             logging.info("Shutting down the background loop...")
             self.logging_ = False
+            self.usbWriter.close()
             self.notifier.stop()
             self.loop.call_soon_threadsafe(self.loop.stop)
             self.listener_thread.join()
