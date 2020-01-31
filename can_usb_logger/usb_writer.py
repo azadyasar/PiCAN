@@ -66,6 +66,7 @@ class USBWriter(object):
                 self.target_file_path))
             return
         try:
+            logging.info("Writing {}".format(lines))
             self.csv_writer.writerows(lines)
             # self.target_file.write(lines)
             # self.target_file.write('\n')
@@ -77,3 +78,10 @@ class USBWriter(object):
             logging.error("Error occured while writing [{}] to file [{}]. Details: {}".format(
                 lines, self.target_file_path, ex))
             self.is_targetfile_open = False
+
+    def close(self):
+        if self.is_targetfile_open:
+            try:
+                self.target_file.close()
+            except Exception as e:
+                logging.error("Error saving file. Details: {}".format(e))

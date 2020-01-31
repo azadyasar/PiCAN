@@ -153,8 +153,8 @@ class CANListener:
             self.can_batch_data_lock.release()
             logging.info("No batch can data to save..")
             return
-        self.usbWriter.writeLine(self.can_batch_data)
         logging.info("Saving [{}]".format(self.can_batch_data))
+        self.usbWriter.writeLine(self.can_batch_data)
         self.can_batch_data.clear()
         self.can_batch_data_lock.release()
         thr = threading.Timer(10, self.save)
