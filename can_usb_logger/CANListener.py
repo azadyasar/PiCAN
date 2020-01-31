@@ -137,7 +137,7 @@ class CANListener:
         for can_id in self.can_messages:
             can_data[self.can_id_data_map[can_id]] = self.can_messages[can_id]
         self.can_batch_data_lock.acquire()
-        logging.info("Logging [{}]".format(can_data))
+        # logging.info("Logging [{}]".format(can_data))
         self.can_batch_data.append(can_data)
         self.can_batch_data_lock.release()
         thr = threading.Timer(1, self.log)
@@ -153,7 +153,7 @@ class CANListener:
             self.can_batch_data_lock.release()
             logging.info("No batch can data to save..")
             return
-        logging.info("Saving [{}]".format(self.can_batch_data))
+        # logging.info("Saving [{}]".format(self.can_batch_data))
         self.usbWriter.writeLine(self.can_batch_data)
         self.can_batch_data.clear()
         self.can_batch_data_lock.release()
@@ -185,6 +185,11 @@ class CANListener:
         if self.notifier is not None:
             logging.info("Shutting down the background loop...")
             self.logging_ = False
+            logging.info("Saving the CSV file. Do not shutdown")
+            self.can_batch_data_lock.acquire()
+            self.usbWriter.writeLine(self.can_batch_data)
+            self.can_batch_data.clear()
+            self.can_batch_data_lock.release()
             self.usbWriter.close()
             self.notifier.stop()
             self.loop.call_soon_threadsafe(self.loop.stop)
