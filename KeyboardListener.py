@@ -22,6 +22,7 @@ class KeyboardListener(object):
             req = input()
             if req == "q" or req == "Q":
                 logging.info("Stopping keyboard listener")
+                self.client.stop_listener()
                 self.running_ = False
             elif req == "su" or req == "SU":
                 self.client.searchUSB()
