@@ -13,60 +13,77 @@ class KeyboardListener(object):
     def __init__(self, client: CANClient or OBDTracker, is_secured: bool = False):
         self.client = client
         self.is_secured = is_secured
-
-        self.setup()
-
-    def on_press(self, key: keyboard.KeyboardEvent):
-        # print("Device: ", key.device)
-        # print("Event type: ", key.event_type)
-        # print("is_keypad: ", key.is_keypad)
-        # print(key, key.name)
-        if key.name == "esc":
-            print("esc pressed")
-
-    def send(self):
-        if self.is_secured:
-            data = [randint(0, 15) for i in range(randint(0, 8))]
-            id = randint(0, 255)
-            logging.info(
-                "Generated random CAN message with params => A_ID: {}, data: {}".format(id, data))
-            self.client.send_message(arb_id=id, data=data)
-        else:
-            logging.info(
-                "You're running in insecure mode. Run with -s flag to be able to send messages into the network.")
-
-    def restart(self):
-        try:
-            self.client.listen_async()
-        except PcanError as pcanErr:
-            logging.error(
-                "Error occured while trying to listen to the CAN bus.\n\tDetails: {}".format(pcanErr))
-
-    def reconnect(self):
-        logging.info("Reconnecting...")
-        self.client.shutdown()
-        self.client.connect()
-
-    def setup(self):
-        print("Setting up keyboard")
-        self.key_press_callbacks = {'shift+w':
-                                    self.client.watch,
-                                    'shift+s': self.send,
-                                    'shift+q': self.client.stop_watcher,
-                                    'shift+p': self.client.stop_listener,
-                                    'shift+c': self.restart,
-                                    'shift+r': self.reconnect}
-        for key_comb in self.key_press_callbacks:
-            keyboard.add_hotkey(key_comb, self.key_press_callbacks[key_comb])
-        # keyboard.add_hotkey('page up, page down',
-        #                     lambda: print('foobar'))
-        # keyboard.add_hotkey('ctrl+shift+a', lambda: print('CSA'))
+        self.running_ = False
 
     def start(self):
-        print("Starting keyboard listener...")
-        keyboard.on_press(self.on_press)
-        keyboard.wait("esc")
-        print("Shutting down...")
+        self.running_ = True
+        while self.running_:
+            req = input()
+            if req == "q" or req == "Q":
+                logging.info("Stopping keyboard listener")
+                self.running_ = False
+
+    def stop(self):
+        self.running_ = False
+
+# class KeyboardListener(object):
+#     def __init__(self, client: CANClient or OBDTracker, is_secured: bool = False):
+#         self.client = client
+#         self.is_secured = is_secured
+
+#         self.setup()
+
+#     def on_press(self, key: keyboard.KeyboardEvent):
+#         # print("Device: ", key.device)
+#         # print("Event type: ", key.event_type)
+#         # print("is_keypad: ", key.is_keypad)
+#         # print(key, key.name)
+#         if key.name == "esc":
+#             print("esc pressed")
+
+#     def send(self):
+#         if self.is_secured:
+#             data = [randint(0, 15) for i in range(randint(0, 8))]
+#             id = randint(0, 255)
+#             logging.info(
+#                 "Generated random CAN message with params => A_ID: {}, data: {}".format(id, data))
+#             self.client.send_message(arb_id=id, data=data)
+#         else:
+#             logging.info(
+#                 "You're running in insecure mode. Run with -s flag to be able to send messages into the network.")
+
+#     def restart(self):
+#         try:
+#             self.client.listen_async()
+#         except PcanError as pcanErr:
+#             logging.error(
+#                 "Error occured while trying to listen to the CAN bus.\n\tDetails: {}".format(pcanErr))
+
+#     def reconnect(self):
+#         logging.info("Reconnecting...")
+#         self.client.shutdown()
+#         self.client.connect()
+
+#     def setup(self):
+#         print("Setting up keyboard")
+#         self.key_press_callbacks = {'shift+w':
+#                                     self.client.watch,
+#                                     'shift+s': self.send,
+#                                     'shift+q': self.client.stop_watcher,
+#                                     'shift+p': self.client.stop_listener,
+#                                     'shift+c': self.restart,
+#                                     'shift+r': self.reconnect}
+#         for key_comb in self.key_press_callbacks:
+#             keyboard.add_hotkey(key_comb, self.key_press_callbacks[key_comb])
+#         # keyboard.add_hotkey('page up, page down',
+#         #                     lambda: print('foobar'))
+#         # keyboard.add_hotkey('ctrl+shift+a', lambda: print('CSA'))
+
+#     def start(self):
+#         print("Starting keyboard listener...")
+#         keyboard.on_press(self.on_press)
+#         keyboard.wait("esc")
+#         print("Shutting down...")
 
 
 # class KeyboardListener:
