@@ -53,7 +53,7 @@ class CANListener:
                 self.can_messages[can_id] = -1
             csv_header = []
             csv_header.append("timestamp")
-            for index, can_id in self.can_messages:
+            for index, can_id in enumerate(self.can_messages):
                 self.can_id_data_map[can_id] = index + 1
                 csv_header.append(can_id)
             self.csv_header.append(csv_header)
