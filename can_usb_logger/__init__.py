@@ -1,1 +1,1 @@
-from .can_client import CANClient
+from .can_client import USBCANClient

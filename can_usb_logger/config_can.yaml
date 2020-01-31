@@ -13,4 +13,4 @@ Network:
 #   - publish: to publish through MQTT
 Job: "log"
 # CAN Message IDs to log
-CAN_MESSAGES: [1, 124]
+CAN_MESSAGES: [1, 124, 155, 245]

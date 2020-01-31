@@ -14,7 +14,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("-b", "--backend", type=str, default="can")
     parser.add_argument("-mqtt", "--usemqtt", type=bool, default=False)
-    parser.add_argument("-usb", "--saveusb", type=bool, default=True)
+    parser.add_argument("-usb", "--saveusb", type=bool, default=False)
     parser.add_argument("-s", "--secure", type=bool, default=False)
     parser.add_argument("-br", "--bitrate", type=int, default=None)
     args = vars(parser.parse_args())
@@ -40,13 +40,14 @@ if __name__ == "__main__":
     client = None
     if save_to_usb:
         logger.info("Logging to USB...")
-        from can_usb_logger import CANClient
+        from can_usb_logger import USBCANClient
     else:
         from avl_can import CANClient
 
     if backend == "can":
         if save_to_usb:
-            client = CANClient(bitrate=bitrate)
+            logger.info("Creating CAN USB Logger")
+            client = USBCANClient(bitrate=bitrate)
         else:
             client = CANClient(mqtt_client=mqtt_client, bitrate=bitrate)
         client.connect()

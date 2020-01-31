@@ -9,7 +9,7 @@ from .CANMessage import CANMessage
 logging.getLogger().setLevel(logging.INFO)
 
 
-class CANClient:
+class USBCANClient:
     def __init__(self, bitrate: int = None):
         self.config_dict = Config().read_config()
         # logging.info("CAN config file is read: {}".format(self.config_dict))
@@ -47,7 +47,7 @@ class CANClient:
         if self.bus is None or self.can_listener is None:
             logging.warning("Connect to a CAN bus first.")
             return
-        self.can_listener.start_background_listener()
+        self.can_listener.start_logger()
 
     def stop_listener(self):
         if self.can_listener is None:

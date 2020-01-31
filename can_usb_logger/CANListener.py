@@ -3,8 +3,10 @@ from can.bus import BusState
 import asyncio
 import signal
 import time
-from threading import Thread
+from threading import Thread, Lock
 import threading
+
+from .usb_writer import USBWriter
 
 try:
     from .CANMessage import CANMessage
@@ -28,6 +30,9 @@ class CANListener:
         self.listener_thread = None
         self.notifier = None
         self.loop = None
+        self.logging_ = False
+        self.logger_thread = None
+        self.saver_thread = None
         self.listener_thread = None
         self.watcher_thread = None
         self.watcher_loop = None
@@ -35,12 +40,23 @@ class CANListener:
         self._watcher_start_time = None
         self.watched_msg_counter = 0
         self.init_can_ids()
+        self.usbWriter = USBWriter()
+        self.can_batch_data_lock = Lock()
+        self.can_batch_data = []
+        self.can_id_data_map = {}
+        self.csv_header = []
 
     def init_can_ids(self):
         self.can_messages = {}
         if self.config is not None and CAN_CONSTANTS.CAN_MESSAGES_STR in self.config:
             for can_id in self.config[CAN_CONSTANTS.CAN_MESSAGES_STR]:
                 self.can_messages[can_id] = -1
+            csv_header = []
+            csv_header.append("timestamp")
+            for index, can_id in self.can_messages:
+                self.can_id_data_map[can_id] = index + 1
+                csv_header.append(can_id)
+            self.csv_header.append(csv_header)
             logging.info("Read {} of CAN message requests.".format(
                 len(self.can_messages)))
         elif CAN_CONSTANTS.CAN_MESSAGES_STR not in self.config:
@@ -48,10 +64,9 @@ class CANListener:
                 CAN_CONSTANTS.CAN_MESSAGES_STR))
 
     def set_bus(self, bus):
-        self.bus = bus
         if self.listener_thread is not None:
             self.stop_async_listener()
-        self.start_background_listener()
+        self.bus = bus
 
     def get_bus(self):
         return self.bus
@@ -87,13 +102,19 @@ class CANListener:
             print("keyboardInterrupt! Stopped listening to the CAN bus")
             pass
 
-    def start_background_listener(self) -> Thread:
+    def start_logger(self) -> Thread:
         if (self.listener_thread is not None and self.listener_thread.is_alive()):
             logging.info(
                 "A listener thread is already running. Shutting it down..")
             self.stop_async_listener()
+        self.usbWriter.writeLine(self.csv_header)
+        self.logging_ = True
+        self.logger_thread = Thread(self.log)
+        self.saver_thread = Thread(self.save)
         self.listener_thread = Thread(target=self.listen_asynchronously)
         self.listener_thread.start()
+        self.logger_thread.start()
+        self.saver_thread.start()
         return self.listener_thread
         # try:
         #     thread.join()
@@ -106,14 +127,39 @@ class CANListener:
             logging.warning(
                 "[{}]: Must set bus first".format(func_info.co_name))
             return
-        job_callback_func = self.can_message_log_callback
-        listeners = [self.update_can_data_callback, job_callback_func]
+        # job_callback_func = self.can_message_log_callback
+        listeners = [self.update_can_data_callback]  # , job_callback_func]
         asyncio.set_event_loop(asyncio.new_event_loop())
         self.loop = asyncio.get_event_loop()
         logging.info("Starting the notifier loop...")
         self.notifier = can.Notifier(self.bus, listeners, loop=self.loop)
         if not self.loop.is_running():
             self.loop.run_forever()
+
+    def log(self):
+        if not self.logging_:
+            logging.info("CANListener is not logging anymore.")
+            return
+        can_data = [None] * (len(self.can_messages) + 1)
+        can_data[0] = time.time()
+        for can_id in self.can_messages:
+            can_data[self.can_id_data_map[can_id]] = self.can_messages[can_id]
+        self.can_batch_data_lock.acquire()
+        self.can_batch_data.append(can_data)
+        self.can_batch_data_lock.release()
+
+    def save(self):
+        if not self.logging_:
+            logging.info("CANListener is not logging anymore.")
+            return
+        self.can_batch_data_lock.acquire()
+        if len(self.can_batch_data) is 0:
+            self.can_batch_data_lock.release()
+            logging.info("No batch can data to save..")
+            return
+        self.usbWriter.writeLine(self.can_batch_data)
+        self.can_batch_data.clear()
+        self.can_batch_data_lock.release()
 
     def stop_async_listener(self, inside_call: bool = False):
         if self.notifier is not None:
@@ -124,6 +170,7 @@ class CANListener:
             self.loop = None
             self.notifier = None
             self.listener_thread = None
+            self.logging_ = False
             logging.info("Background listener is shutdown.")
         elif not inside_call:
             logging.info("No listeners are running...")
