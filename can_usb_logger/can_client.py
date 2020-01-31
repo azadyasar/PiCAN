@@ -37,6 +37,10 @@ class USBCANClient:
         self.can_listener = CANListener(
             bus=self.bus, config=self.config_dict)
         return True
+    
+    def searchUSB(self):
+        if self.can_listener is not None:
+            self.can_listener.searchUSB()
 
     def shutdown(self):
         if self.bus is not None:

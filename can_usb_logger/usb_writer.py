@@ -41,16 +41,16 @@ class USBWriter(object):
     def get_mount_points(self, devices=None):
         devices = devices or self.get_usb_devices()
         output = check_output(['mount']).decode().splitlines()
-        print("output: ", output)
+        #print("output: ", output)
         def is_usb(path): return any(dev in path for dev in devices)
         usb_info = (line for line in output if is_usb(line.split()[0]))
-        print("usb_info: ", usb_info)
+        #print("usb_info: ", usb_info)
         fullInfo = []
         for info in usb_info:
-            print("info: ", info)
+         #   print("info: ", info)
             mountURI = info.split()[0]
             usbURI = info.split()[2]
-            print(info.split().__sizeof__())
+          #  print(info.split().__sizeof__())
             for x in range(3, info.split().__sizeof__()):
                 if info.split()[x].__eq__("type"):
                     for m in range(3, x):

@@ -71,6 +71,9 @@ class CANListener:
     def get_bus(self):
         return self.bus
 
+    def searchUSB(self):
+        self.usbWriter = USBWriter()    
+
     def receive_all(self):
         try:
             print("Started listening to all CAN messages. Hit CTRL+C to stop")
