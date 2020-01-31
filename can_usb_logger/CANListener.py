@@ -139,8 +139,12 @@ class CANListener:
         logging.info("Starting the notifier loop...")
         self.notifier = can.Notifier(self.bus, listeners, loop=self.loop)
         if not self.loop.is_running():
-            self.loop.run_forever()
-
+            try:
+                self.loop.run_forever()
+            except can.CanError as e:
+                logging.error("Error while listening. Details: {}".format(e))
+            except Exception as e:
+                logging.error("Error while listening. Details: {}".format(e))
     def log(self):
         if not self.logging_:
             logging.info("CANListener is not logging anymore.")
