@@ -39,12 +39,12 @@ class CANListener:
         self.watcher_notifier = None
         self._watcher_start_time = None
         self.watched_msg_counter = 0
-        self.init_can_ids()
         self.usbWriter = USBWriter()
         self.can_batch_data_lock = Lock()
         self.can_batch_data = []
         self.can_id_data_map = {}
         self.csv_header = []
+        self.init_can_ids()
 
     def init_can_ids(self):
         self.can_messages = {}
