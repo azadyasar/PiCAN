@@ -3,6 +3,7 @@ import logging
 from random import randint
 
 from avl_can import CANClient
+from can_usb_logger import USBCANClient
 from obd_listener import OBDTracker
 from can.interfaces.pcan.pcan import PcanError
 
@@ -10,7 +11,7 @@ import keyboard
 
 
 class KeyboardListener(object):
-    def __init__(self, client: CANClient or OBDTracker, is_secured: bool = False):
+    def __init__(self, client: CANClient or OBDTracker or USBCANClient, is_secured: bool = False):
         self.client = client
         self.is_secured = is_secured
         self.running_ = False
@@ -24,6 +25,8 @@ class KeyboardListener(object):
                 self.running_ = False
             elif req == "su" or req == "SU":
                 self.client.searchUSB()
+            elif req == "launch":
+                self.client.start()
 
     def stop(self):
         self.running_ = False

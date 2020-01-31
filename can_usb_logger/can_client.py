@@ -37,7 +37,7 @@ class USBCANClient:
         self.can_listener = CANListener(
             bus=self.bus, config=self.config_dict)
         return True
-    
+
     def searchUSB(self):
         if self.can_listener is not None:
             self.can_listener.searchUSB()
@@ -47,7 +47,7 @@ class USBCANClient:
             self.can_listener.stop_async_listener()
             self.bus.shutdown()
 
-    def listen_async(self):
+    def start(self):
         if self.bus is None or self.can_listener is None:
             logging.warning("Connect to a CAN bus first.")
             return
