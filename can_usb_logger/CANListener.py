@@ -72,7 +72,7 @@ class CANListener:
         return self.bus
 
     def searchUSB(self):
-        self.usbWriter = USBWriter()    
+        self.usbWriter = USBWriter()
 
     def receive_all(self):
         try:
@@ -112,11 +112,13 @@ class CANListener:
             self.stop_async_listener()
         self.usbWriter.writeLine(self.csv_header)
         self.logging_ = True
-        self.logger_thread = Thread(self.log)
-        self.saver_thread = Thread(self.save)
+        self.logger_thread = Thread(target=self.log)
+        self.saver_thread = Thread(target=self.save)
         self.listener_thread = Thread(target=self.listen_asynchronously)
         self.listener_thread.start()
+        logging.info("Starting the logger thread...")
         self.logger_thread.start()
+        logging.info("Starting the saver thread...")
         self.saver_thread.start()
         return self.listener_thread
         # try:
