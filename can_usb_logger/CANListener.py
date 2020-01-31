@@ -51,7 +51,8 @@ class CANListener:
         if self.config is not None and CAN_CONSTANTS.CAN_MESSAGES_STR in self.config:
             for can_id in self.config[CAN_CONSTANTS.CAN_MESSAGES_STR]:
                 self.can_messages[can_id] = -1
-            logging.info("Watching CAN messages: {}".format(self.can_messages.keys()))
+            logging.info("Watching CAN messages: {}".format(
+                self.can_messages.keys()))
             csv_header = []
             csv_header.append("timestamp")
             for index, can_id in enumerate(self.can_messages):
@@ -127,6 +128,39 @@ class CANListener:
         # except KeyboardInterrupt:
         #     logging.info("Keyboard interrupt. Stopping...")
 
+    def log(self):
+        if not self.logging_:
+            logging.info("CANListener is not logging anymore.")
+            return
+        can_data = [None] * (len(self.can_messages) + 1)
+        can_data[0] = time.time()
+        for can_id in self.can_messages:
+            can_data[self.can_id_data_map[can_id]] = self.can_messages[can_id]
+        self.can_batch_data_lock.acquire()
+        logging.info("Logging [{}]".format(can_data))
+        self.can_batch_data.append(can_data)
+        self.can_batch_data_lock.release()
+        thr = threading.Timer(1, self.log)
+        thr.setDaemon(True)
+        thr.start()
+
+    def save(self):
+        if not self.logging_:
+            logging.info("CANListener is not logging anymore.")
+            return
+        self.can_batch_data_lock.acquire()
+        if len(self.can_batch_data) is 0:
+            self.can_batch_data_lock.release()
+            logging.info("No batch can data to save..")
+            return
+        self.usbWriter.writeLine(self.can_batch_data)
+        logging.info("Saving [{}]".format(self.can_batch_data))
+        self.can_batch_data.clear()
+        self.can_batch_data_lock.release()
+        thr = threading.Timer(10, self.save)
+        thr.setDaemon(True)
+        thr.start()
+
     def listen_asynchronously(self):
         func_info = inspect.currentframe().f_back.f_code
         if self.bus is None:
@@ -146,38 +180,6 @@ class CANListener:
                 logging.error("Error while listening. Details: {}".format(e))
             except Exception as e:
                 logging.error("Error while listening. Details: {}".format(e))
-    def log(self):
-        if not self.logging_:
-            logging.info("CANListener is not logging anymore.")
-            return
-        can_data = [None] * (len(self.can_messages) + 1)
-        can_data[0] = time.time()
-        for can_id in self.can_messages:
-            can_data[self.can_id_data_map[can_id]] = self.can_messages[can_id]
-        self.can_batch_data_lock.acquire()
-        logging.info("Logging [{}]".format(can_data))
-        self.can_batch_data.append(can_data)
-        self.can_batch_data_lock.release()
-        thr = threading.Timer(0.25, self.log)
-        thr.setDaemon(True)
-        thr.start()
-
-    def save(self):
-        if not self.logging_:
-            logging.info("CANListener is not logging anymore.")
-            return
-        self.can_batch_data_lock.acquire()
-        if len(self.can_batch_data) is 0:
-            self.can_batch_data_lock.release()
-            logging.info("No batch can data to save..")
-            return
-        self.usbWriter.writeLine(self.can_batch_data)
-        logging.info("Saving [{}]".format(self.can_batch_data))
-        self.can_batch_data.clear()
-        self.can_batch_data_lock.release()
-        thr = threading.Timer(5, self.save)
-        thr.setDaemon(True)
-        thr.start()
 
     def stop_async_listener(self, inside_call: bool = False):
         if self.notifier is not None:
@@ -194,9 +196,7 @@ class CANListener:
             logging.info("No listeners are running...")
 
     def update_can_data_callback(self, msg: can.Message):
-        print("CAN msg received.")
-        print("typeof msg.data: {}".format(type(msg.data)))
-        print(msg.data)
+        print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
         if msg.arbitration_id in self.can_messages.keys():
             logging.info("Updating watched CAN message: {}".format(msg))
             self.can_messages[msg.arbitration_id] = msg.data
