@@ -51,6 +51,7 @@ class CANListener:
         if self.config is not None and CAN_CONSTANTS.CAN_MESSAGES_STR in self.config:
             for can_id in self.config[CAN_CONSTANTS.CAN_MESSAGES_STR]:
                 self.can_messages[can_id] = -1
+            logging.info("Watching CAN messages: {}".format(self.can_messages.keys()))
             csv_header = []
             csv_header.append("timestamp")
             for index, can_id in enumerate(self.can_messages):
@@ -154,6 +155,7 @@ class CANListener:
         for can_id in self.can_messages:
             can_data[self.can_id_data_map[can_id]] = self.can_messages[can_id]
         self.can_batch_data_lock.acquire()
+        logging.info("Logging [{}]".format(can_data))
         self.can_batch_data.append(can_data)
         self.can_batch_data_lock.release()
         thr = threading.Timer(0.25, self.log)
@@ -170,6 +172,7 @@ class CANListener:
             logging.info("No batch can data to save..")
             return
         self.usbWriter.writeLine(self.can_batch_data)
+        logging.info("Saving [{}]".format(self.can_batch_data))
         self.can_batch_data.clear()
         self.can_batch_data_lock.release()
         thr = threading.Timer(5, self.save)
@@ -179,13 +182,13 @@ class CANListener:
     def stop_async_listener(self, inside_call: bool = False):
         if self.notifier is not None:
             logging.info("Shutting down the background loop...")
+            self.logging_ = False
             self.notifier.stop()
             self.loop.call_soon_threadsafe(self.loop.stop)
             self.listener_thread.join()
             self.loop = None
             self.notifier = None
             self.listener_thread = None
-            self.logging_ = False
             logging.info("Background listener is shutdown.")
         elif not inside_call:
             logging.info("No listeners are running...")
