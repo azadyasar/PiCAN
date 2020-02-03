@@ -41,6 +41,7 @@ class CANListener:
         self.watched_msg_counter = 0
         self.log_period_ = 0.5
         self.save_period_ = 10
+        self.can_message_sequence_ = 0
         self.usbWriter = USBWriter()
         self.can_batch_data_lock = Lock()
         self.can_batch_data = []
@@ -55,6 +56,7 @@ class CANListener:
                 self.can_messages[can_id] = -1
 
             csv_header = []
+            csv_header.append("seq")
             csv_header.append("timestamp")
             for index, can_id in enumerate(self.can_messages):
                 self.can_id_data_map[can_id] = index + 1
@@ -141,8 +143,10 @@ class CANListener:
         if not self.logging_:
             logging.info("CANListener is not logging anymore.")
             return
-        can_data = [None] * (len(self.can_messages) + 1)
-        can_data[0] = time.time()
+        self.can_message_sequence_ += 1
+        can_data = [None] * (len(self.can_messages) + 2)
+        can_data[0] = self.can_message_sequence_
+        can_data[1] = time.time()
         for can_id in self.can_messages:
             can_data[self.can_id_data_map[can_id]] = self.can_messages[can_id]
         self.can_batch_data_lock.acquire()
@@ -237,7 +241,7 @@ class CANListener:
         print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
         if msg.arbitration_id in self.can_messages.keys():
             logging.info("Updating watched CAN message: {}".format(msg))
-            self.can_messages[msg.arbitration_id] = msg.data.hex() 
+            self.can_messages[msg.arbitration_id] = msg.data.hex()
             # logging.info("Skipping CAN message (not watched): {}".format(msg))
 
     def can_message_log_callback(self, msg: can.Message):
