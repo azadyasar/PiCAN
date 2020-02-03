@@ -6,7 +6,7 @@ from avl_can import CANClient
 from can_usb_logger import USBCANClient
 from obd_listener import OBDTracker
 from can.interfaces.pcan.pcan import PcanError
-
+from can import CanError
 import keyboard
 
 
@@ -27,7 +27,10 @@ class KeyboardListener(object):
             elif req == "su" or req == "SU":
                 self.client.searchUSB()
             elif req == "launch":
-                self.client.start()
+                try:
+                    self.client.start()
+                except CanError as err:
+                    logging.error("Error occured while trying to launch the logger. Details: {}".format(err))
 
     def stop(self):
         self.running_ = False

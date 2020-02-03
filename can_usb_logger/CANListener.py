@@ -178,7 +178,7 @@ class CANListener:
             return
         # job_callback_func = self.can_message_log_callback
         listeners = [self.update_can_data_callback,
-                     self.inner_listener_]  # , job_callback_func]
+                     self.on_error]  # , job_callback_func]
         asyncio.set_event_loop(asyncio.new_event_loop())
         self.loop = asyncio.get_event_loop()
         logging.info("Starting the notifier loop...")
@@ -196,7 +196,7 @@ class CANListener:
             logging.info("Shutting down the background loop...")
             self.logging_ = False
             logging.info("Saving the CSV({}) file. Do not shutdown".format(
-                self.usbWriter.target_file.name()))
+                self.usbWriter.target_file.name))
             self.can_batch_data_lock.acquire()
             self.usbWriter.writeLine(self.can_batch_data)
             self.can_batch_data.clear()
