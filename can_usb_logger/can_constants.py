@@ -16,4 +16,5 @@ class CAN_CONSTANTS:
     JOB_STR = "Job"
     JOB_LOG_STR = "log"
     JOB_PUBLISH_STR = "publish"
-
+    LOG_PERIOD_STR = "LOG_PERIOD"
+    SAVE_PERIOD_STR = "SAVE_PERIOD"

@@ -39,6 +39,8 @@ class CANListener:
         self.watcher_notifier = None
         self._watcher_start_time = None
         self.watched_msg_counter = 0
+        self.log_period_ = 0.5
+        self.save_period_ = 10
         self.usbWriter = USBWriter()
         self.can_batch_data_lock = Lock()
         self.can_batch_data = []
@@ -51,16 +53,23 @@ class CANListener:
         if self.config is not None and CAN_CONSTANTS.CAN_MESSAGES_STR in self.config:
             for can_id in self.config[CAN_CONSTANTS.CAN_MESSAGES_STR]:
                 self.can_messages[can_id] = -1
-            logging.info("Watching CAN messages: {}".format(
-                self.can_messages.keys()))
+
             csv_header = []
             csv_header.append("timestamp")
             for index, can_id in enumerate(self.can_messages):
                 self.can_id_data_map[can_id] = index + 1
                 csv_header.append(can_id)
             self.csv_header.append(csv_header)
-            logging.info("Read {} of CAN message requests.".format(
-                len(self.can_messages)))
+
+            # Read log and save period parameters
+            if CAN_CONSTANTS.LOG_PERIOD_STR in self.config:
+                self.log_period_ = self.config[CAN_CONSTANTS.LOG_PERIOD_STR]
+            if CAN_CONSTANTS.SAVE_PERIOD_STR in self.config:
+                self.save_period_ = self.config[CAN_CONSTANTS.SAVE_PERIOD_STR]
+
+            logging.info("CAN Config: Logging Period: {}, Saving Period: {}, Watched CAN Messages: {}".format(
+                self.log_period_, self.save_period_, self.can_messages.keys()))
+
         elif CAN_CONSTANTS.CAN_MESSAGES_STR not in self.config:
             logging.warning("CAN Config does not include {0}".format(
                 CAN_CONSTANTS.CAN_MESSAGES_STR))
@@ -185,7 +194,8 @@ class CANListener:
         if self.notifier is not None:
             logging.info("Shutting down the background loop...")
             self.logging_ = False
-            logging.info("Saving the CSV file. Do not shutdown")
+            logging.info("Saving the CSV({}) file. Do not shutdown".format(
+                self.usbWriter.target_file.name()))
             self.can_batch_data_lock.acquire()
             self.usbWriter.writeLine(self.can_batch_data)
             self.can_batch_data.clear()

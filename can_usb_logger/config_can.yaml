@@ -14,3 +14,5 @@ Network:
 Job: "log"
 # CAN Message IDs to log
 CAN_MESSAGES: [1, 124, 155, 245]
+LOG_PERIOD: 0.25
+SAVE_PERIOD: 5
