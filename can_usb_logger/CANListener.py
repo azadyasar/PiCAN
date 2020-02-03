@@ -47,6 +47,7 @@ class CANListener:
         self.can_id_data_map = {}
         self.csv_header = []
         self.init_can_ids()
+        self.inner_listener_ = self.InnerCANListener(self)
 
     def init_can_ids(self):
         self.can_messages = {}
@@ -177,7 +178,8 @@ class CANListener:
                 "[{}]: Must set bus first".format(func_info.co_name))
             return
         # job_callback_func = self.can_message_log_callback
-        listeners = [self.update_can_data_callback]  # , job_callback_func]
+        listeners = [self.update_can_data_callback,
+                     self.inner_listener_]  # , job_callback_func]
         asyncio.set_event_loop(asyncio.new_event_loop())
         self.loop = asyncio.get_event_loop()
         logging.info("Starting the notifier loop...")
@@ -211,6 +213,22 @@ class CANListener:
         elif not inside_call:
             logging.info("No listeners are running...")
 
+    class InnerCANListener:
+        def __init__(self, outer):
+            self.outer_ = outer
+
+        def update_can_data_callback(self, msg: can.Message):
+            print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
+            if msg.arbitration_id in self.outer_.can_messages.keys():
+                logging.info("Updating watched CAN message: {}".format(msg))
+                self.outer_.can_messages[msg.arbitration_id] = msg.data.decode(
+                )
+
+        def on_error(self, error):
+            logging.error(
+                "Error occured while listening to the CAN bus. Details: {}".format(error))
+            self.outer_.stop_async_listener()
+
     def update_can_data_callback(self, msg: can.Message):
         print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
         if msg.arbitration_id in self.can_messages.keys():
@@ -229,44 +247,6 @@ class CANListener:
         except can.CanError as canErr:
             logging.error(
                 "Error while sending a CAN message {}".format(canErr))
-
-    def start_watcher(self) -> Thread:
-        if (self.watcher_thread is not None and self.watcher_thread.is_alive()):
-            logging.info(
-                "A watcher thread is already running. Shutting it down..")
-            self.stop_watcher()
-        self.watcher_thread = Thread(target=self.watch_async)
-        self.watcher_thread.start()
-        self._watcher_start_time = time.time()
-        return self.watcher_thread
-
-    def watch_async(self):
-        self.watched_msg_counter = 0
-        listeners = [self.watch_counter]
-        asyncio.set_event_loop(asyncio.new_event_loop())
-        self.watcher_loop = asyncio.get_event_loop()
-        logging.info("Starting the watcher loop...")
-        self.watcher_notifier = can.Notifier(
-            self.bus, listeners, loop=self.watcher_loop)
-        if not self.watcher_loop.is_running():
-            self.watcher_loop.run_forever()
-
-    def watch_counter(self, msg: can.Message):
-        elapsed_time = time.time() - self._watcher_start_time
-        self.watched_msg_counter += 1
-        print("# of messages received: {0} in {1:.4f} secs".format(
-            self.watched_msg_counter, elapsed_time), end="\r", flush=True)
-
-    def stop_watcher(self):
-        print("")
-        if self.watcher_notifier is not None:
-            logging.info("Shutting down the watcher loop...")
-            self.watcher_notifier.stop()
-            self.watcher_loop.call_soon_threadsafe(self.watcher_loop.stop)
-            self.watcher_thread.join()
-            self.watcher_loop = None
-            self.watcher_notifier = None
-            self.watcher_thread = None
 
     @staticmethod
     def print_postproc():
