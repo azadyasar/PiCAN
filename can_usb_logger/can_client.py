@@ -59,19 +59,6 @@ class USBCANClient:
             return
         self.can_listener.stop_async_listener()
 
-    def watch(self):
-        if self.can_listener is None:
-            logging.warning("No CAN listeners found.")
-            return
-        self.can_listener.stop_async_listener(inside_call=True)
-        self.can_listener.start_watcher()
-
-    def stop_watcher(self):
-        if self.can_listener is None:
-            logging.warning("No CAN listeners found.")
-            return
-        self.can_listener.stop_watcher()
-
     def send_message(self, arb_id, data):
         if self.bus is None:
             logging.warning("Connect to a CAN bus first.")
