@@ -47,7 +47,6 @@ class CANListener:
         self.can_id_data_map = {}
         self.csv_header = []
         self.init_can_ids()
-        self.inner_listener_ = self.InnerCANListener(self)
 
     def init_can_ids(self):
         self.can_messages = {}
@@ -213,21 +212,26 @@ class CANListener:
         elif not inside_call:
             logging.info("No listeners are running...")
 
-    class InnerCANListener:
-        def __init__(self, outer):
-            self.outer_ = outer
+    # class InnerCANListener:
+    #     def __init__(self, outer):
+    #         self.outer_ = outer
 
-        def update_can_data_callback(self, msg: can.Message):
-            print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
-            if msg.arbitration_id in self.outer_.can_messages.keys():
-                logging.info("Updating watched CAN message: {}".format(msg))
-                self.outer_.can_messages[msg.arbitration_id] = msg.data.decode(
-                )
+    #     def update_can_data_callback(self, msg: can.Message):
+    #         print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
+    #         if msg.arbitration_id in self.outer_.can_messages.keys():
+    #             logging.info("Updating watched CAN message: {}".format(msg))
+    #             self.outer_.can_messages[msg.arbitration_id] = msg.data.decode(
+    #             )
 
-        def on_error(self, error):
-            logging.error(
-                "Error occured while listening to the CAN bus. Details: {}".format(error))
-            self.outer_.stop_async_listener()
+    #     def on_error(self, error):
+    #         logging.error(
+    #             "Error occured while listening to the CAN bus. Details: {}".format(error))
+    #         self.outer_.stop_async_listener()
+
+    def on_error(self, error):
+        logging.error(
+            "Error occured while listening to the CAN bus. Details: {}".format(error))
+        # self.outer_.stop_async_listener()
 
     def update_can_data_callback(self, msg: can.Message):
         print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
