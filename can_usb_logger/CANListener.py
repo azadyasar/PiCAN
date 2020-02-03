@@ -149,7 +149,7 @@ class CANListener:
         # logging.info("Logging [{}]".format(can_data))
         self.can_batch_data.append(can_data)
         self.can_batch_data_lock.release()
-        thr = threading.Timer(1, self.log)
+        thr = threading.Timer(self.log_period_, self.log)
         thr.setDaemon(True)
         thr.start()
 
@@ -166,7 +166,7 @@ class CANListener:
         self.usbWriter.writeLine(self.can_batch_data)
         self.can_batch_data.clear()
         self.can_batch_data_lock.release()
-        thr = threading.Timer(10, self.save)
+        thr = threading.Timer(self.save_period_, self.save)
         thr.setDaemon(True)
         thr.start()
 
@@ -237,7 +237,7 @@ class CANListener:
         print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
         if msg.arbitration_id in self.can_messages.keys():
             logging.info("Updating watched CAN message: {}".format(msg))
-            self.can_messages[msg.arbitration_id] = msg.data
+            self.can_messages[msg.arbitration_id] = msg.data.hex() 
             # logging.info("Skipping CAN message (not watched): {}".format(msg))
 
     def can_message_log_callback(self, msg: can.Message):
