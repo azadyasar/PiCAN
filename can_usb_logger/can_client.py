@@ -53,6 +53,9 @@ class USBCANClient:
             return
         self.can_listener.start_logger()
 
+    def restart(self):
+        self.can_listener.restart()
+
     def stop_listener(self):
         if self.can_listener is None:
             logging.warning("No CAN listeners found.")
