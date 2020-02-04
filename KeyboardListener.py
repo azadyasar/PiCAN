@@ -35,7 +35,7 @@ class KeyboardListener(object):
             elif req == "r":
                 try:
                     self.client.stop_listener()
-                    self.client.start()
+                    self.client.restart()
                 except Exception as ex:
                     logging.error(
                         "Error occured while trying to launch the logger. Details: {}".format(ex))

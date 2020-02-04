@@ -27,6 +27,9 @@ class CANListener:
     def __init__(self, bus, config={}):
         self.bus = bus
         self.config = config
+        self.setup()
+
+    def setup(self):
         self.listener_thread = None
         self.notifier = None
         self.loop = None
@@ -83,6 +86,9 @@ class CANListener:
 
     def get_bus(self):
         return self.bus
+
+    def restart(self):
+        self.setup()
 
     def searchUSB(self):
         self.usbWriter = USBWriter()
@@ -237,9 +243,10 @@ class CANListener:
         # self.outer_.stop_async_listener()
 
     def update_can_data_callback(self, msg: can.Message):
-        #print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
+        # print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
         if msg.arbitration_id in self.can_messages.keys():
-            print("Updating watched CAN message: ID({}) Data({})               ".format(msg.arbitration_id, msg.data), end='\r')
+            print("Updating watched CAN message: ID({}) Data({})               ".format(
+                msg.arbitration_id, msg.data), end='\r')
             self.can_messages[msg.arbitration_id] = msg.data.hex()
 
     def can_message_log_callback(self, msg: can.Message):
