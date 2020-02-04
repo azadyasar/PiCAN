@@ -26,6 +26,10 @@ class CANListener:
     def __init__(self, bus, config={}, mqtt_client: MqttClient = None):
         self.bus = bus
         self.config = config
+        self.mqtt_client = mqtt_client
+        self.setup()
+
+    def setup(self):
         self.listener_thread = None
         self.notifier = None
         self.loop = None
@@ -35,7 +39,6 @@ class CANListener:
         self.watcher_notifier = None
         self._watcher_start_time = None
         self.watched_msg_counter = 0
-        self.mqtt_client = mqtt_client
         self.construct_id_desc_mapping()
         self.init_can_messages()
         self.construct_message_id_mapping()
@@ -121,6 +124,9 @@ class CANListener:
         except KeyboardInterrupt:
             print("keyboardInterrupt! Stopped listening to the CAN bus")
             pass
+
+    def restart(self):
+        self.setup()
 
     def start(self) -> Thread:
         if (self.listener_thread is not None and self.listener_thread.is_alive()):

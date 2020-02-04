@@ -45,11 +45,11 @@ class CANClient:
             self.can_listener.stop_async_listener()
             self.bus.shutdown()
 
-    def listen_async(self):
+    def start(self):
         if self.bus is None or self.can_listener is None:
             logging.warning("Connect to a CAN bus first.")
             return
-        self.can_listener.start_background_listener()
+        self.can_listener.start()
 
     def stop_listener(self):
         if self.can_listener is None:
