@@ -66,7 +66,7 @@ class USBWriter(object):
                 self.target_file_path))
             return
         try:
-            logging.info("Writing {}".format(lines))
+            logging.info("\nWriting CAN batch data. Size: {}".format(len(lines)))
             self.csv_writer.writerows(lines)
             # self.target_file.write(lines)
             # self.target_file.write('\n')

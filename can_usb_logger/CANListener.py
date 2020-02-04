@@ -59,7 +59,7 @@ class CANListener:
             csv_header.append("seq")
             csv_header.append("timestamp")
             for index, can_id in enumerate(self.can_messages):
-                self.can_id_data_map[can_id] = index + 1
+                self.can_id_data_map[can_id] = index + 2
                 csv_header.append(can_id)
             self.csv_header.append(csv_header)
 
@@ -181,8 +181,7 @@ class CANListener:
                 "[{}]: Must set bus first".format(func_info.co_name))
             return
         # job_callback_func = self.can_message_log_callback
-        listeners = [self.update_can_data_callback,
-                     self.on_error]  # , job_callback_func]
+        listeners = [self.update_can_data_callback]  # , job_callback_func]
         asyncio.set_event_loop(asyncio.new_event_loop())
         self.loop = asyncio.get_event_loop()
         logging.info("Starting the notifier loop...")
@@ -238,11 +237,10 @@ class CANListener:
         # self.outer_.stop_async_listener()
 
     def update_can_data_callback(self, msg: can.Message):
-        print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
+        #print("id: {}, data: {}".format(msg.arbitration_id, msg.data))
         if msg.arbitration_id in self.can_messages.keys():
-            logging.info("Updating watched CAN message: {}".format(msg))
+            print("Updating watched CAN message: ID({}) Data({})               ".format(msg.arbitration_id, msg.data), end='\r')
             self.can_messages[msg.arbitration_id] = msg.data.hex()
-            # logging.info("Skipping CAN message (not watched): {}".format(msg))
 
     def can_message_log_callback(self, msg: can.Message):
         print(msg)
