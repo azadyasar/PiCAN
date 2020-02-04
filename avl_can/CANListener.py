@@ -82,7 +82,7 @@ class CANListener:
         self.bus = bus
         if self.listener_thread is not None:
             self.stop_async_listener()
-        self.start_background_listener()
+        self.start()
 
     def get_bus(self):
         return self.bus
@@ -122,9 +122,10 @@ class CANListener:
             print("keyboardInterrupt! Stopped listening to the CAN bus")
             pass
 
-    def start_background_listener(self) -> Thread:
+    def start(self) -> Thread:
         if (self.listener_thread is not None and self.listener_thread.is_alive()):
-            logging.info("A listener thread is already running. Shutting it down..")
+            logging.info(
+                "A listener thread is already running. Shutting it down..")
             self.stop_async_listener()
         self.listener_thread = Thread(target=self.listen_asynchronously)
         self.listener_thread.start()
@@ -149,7 +150,7 @@ class CANListener:
         if not self.loop.is_running():
             self.loop.run_forever()
 
-    def stop_async_listener(self, inside_call : bool = False):
+    def stop_async_listener(self, inside_call: bool = False):
         if self.notifier is not None:
             logging.info("Shutting down the background loop...")
             self.notifier.stop()
@@ -175,9 +176,10 @@ class CANListener:
         print(msg)
         CANListener.print_postproc()
 
-    # Assumes that the mqtt_client is assigned and working 
+    # Assumes that the mqtt_client is assigned and working
     def can_message_publish_callback(self, msg: can.Message):
-        self.mqtt_client.publish(topic=self.msg_id_desc_map[msg.arbitration_id], payload=msg.data)
+        self.mqtt_client.publish(
+            topic=self.msg_id_desc_map[msg.arbitration_id], payload=msg.data)
 
     def send_message(self, arb_id, data):
         can_message = can.Message(arbitration_id=arb_id, data=data)
@@ -186,10 +188,11 @@ class CANListener:
         except can.CanError as canErr:
             logging.error(
                 "Error while sending a CAN message {}".format(canErr))
-    
+
     def start_watcher(self) -> Thread:
         if (self.watcher_thread is not None and self.watcher_thread.is_alive()):
-            logging.info("A watcher thread is already running. Shutting it down..")
+            logging.info(
+                "A watcher thread is already running. Shutting it down..")
             self.stop_watcher()
         self.watcher_thread = Thread(target=self.watch_async)
         self.watcher_thread.start()
@@ -202,14 +205,16 @@ class CANListener:
         asyncio.set_event_loop(asyncio.new_event_loop())
         self.watcher_loop = asyncio.get_event_loop()
         logging.info("Starting the watcher loop...")
-        self.watcher_notifier = can.Notifier(self.bus, listeners, loop=self.watcher_loop)
+        self.watcher_notifier = can.Notifier(
+            self.bus, listeners, loop=self.watcher_loop)
         if not self.watcher_loop.is_running():
             self.watcher_loop.run_forever()
 
     def watch_counter(self, msg: can.Message):
         elapsed_time = time.time() - self._watcher_start_time
         self.watched_msg_counter += 1
-        print("# of messages received: {0} in {1:.4f} secs".format(self.watched_msg_counter, elapsed_time), end="\r", flush=True)
+        print("# of messages received: {0} in {1:.4f} secs".format(
+            self.watched_msg_counter, elapsed_time), end="\r", flush=True)
 
     def stop_watcher(self):
         print("")
@@ -218,8 +223,8 @@ class CANListener:
             self.watcher_notifier.stop()
             self.watcher_loop.call_soon_threadsafe(self.watcher_loop.stop)
             self.watcher_thread.join()
-            self.watcher_loop = None 
-            self.watcher_notifier = None 
+            self.watcher_loop = None
+            self.watcher_notifier = None
             self.watcher_thread = None
 
     @staticmethod

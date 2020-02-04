@@ -30,7 +30,15 @@ class KeyboardListener(object):
                 try:
                     self.client.start()
                 except CanError as err:
-                    logging.error("Error occured while trying to launch the logger. Details: {}".format(err))
+                    logging.error(
+                        "Error occured while trying to launch the logger. Details: {}".format(err))
+            elif req == "r":
+                try:
+                    self.client.stop_listener()
+                    self.client.start()
+                except Exception as ex:
+                    logging.error(
+                        "Error occured while trying to launch the logger. Details: {}".format(ex))
 
     def stop(self):
         self.running_ = False
