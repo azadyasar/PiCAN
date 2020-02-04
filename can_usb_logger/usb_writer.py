@@ -16,7 +16,7 @@ class USBWriter(object):
                 "USBWriter found USB Devices: {}".format(self.devices))
             self.target_usb = self.devices[0][1]
             self.target_file_path = os.path.join(
-                self.target_usb, "test_" + str(time.time()) + ".csv")
+                self.target_usb, "canlog_" + str(time.time()) + ".csv")
             try:
                 self.target_file = open(self.target_file_path, "w")
                 self.csv_writer = csv.writer(self.target_file)
